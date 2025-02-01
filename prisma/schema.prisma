@@ -1,0 +1,79 @@
+datasource db {
+  provider = "postgresql"  
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                       Int      @id @default(autoincrement())
+  firstName                String
+  lastName                 String
+  email                    String   @unique
+  phone                    String
+  temporaryLicenseExpiration DateTime
+  street                   String
+  houseNumber              String
+  postalCode               String
+  city                     String
+  country                  String
+  pickupAllowed            Boolean  @default(false)
+  passwordHash             String?
+  isConfirmed              Boolean  @default(false)
+  role                     Role     @default(USER)
+  createdAt                DateTime @default(now())
+  appointments             Appointment[]
+}
+
+model Appointment {
+  id                    Int      @id @default(autoincrement())
+  startTime             DateTime
+  endTime               DateTime
+  location              Location?  @relation(fields: [locationId], references: [id])
+  locationId            Int?
+  customPickupStreet    String?
+  customPickupHouseNumber String?
+  customPickupPostalCode String?
+  customPickupCity      String?
+  user                  User     @relation(fields: [userId], references: [id])
+  userId                Int
+  timeSlot              TimeSlot  @relation(fields: [timeSlotId], references: [id])
+  timeSlotId            Int       @unique
+  createdAt             DateTime @default(now())
+}
+
+model TimeSlot {
+  id        Int      @id @default(autoincrement())
+  startTime DateTime
+  endTime   DateTime
+  isVisible Boolean  @default(false)
+  status    SlotStatus @default(AVAILABLE)
+  appointment Appointment?  @relation // Define relation as optional here
+  appointmentId Int? @unique
+  createdAt DateTime @default(now())
+}
+
+model Location {
+  id         Int      @id @default(autoincrement())
+  name       String
+  street     String
+  houseNumber String
+  postalCode String
+  city       String
+  country    String   @default("Belgium")
+
+  Appointment Appointment[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum SlotStatus {
+  AVAILABLE
+  BOOKED
+  CANCELED
+}

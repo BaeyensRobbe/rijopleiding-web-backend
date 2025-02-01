@@ -1,0 +1,45 @@
+import nodemailer from 'nodemailer';
+import { OAuth2Client } from 'google-auth-library';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const REDIRECT_URI = process.env.REDIRECT_URI;
+const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
+
+const oAuth2Client = new OAuth2Client(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
+oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
+
+async function sendMail(user, password) {
+  try {
+    const accessToken = await oAuth2Client.getAccessToken();
+
+    const transport = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        type: 'OAuth2',
+        user: process.env.EMAIL_USER,
+        clientId: CLIENT_ID,
+        clientSecret: CLIENT_SECRET,
+        refreshToken: REFRESH_TOKEN,
+        accessToken: accessToken,
+      },
+    });
+
+    const mailOptions = {
+      from: 'Rijopleiding Baeyens <rijopleidingbaeyensinfo@gmail.com>',
+      to: user.email,
+      subject: 'Welcome!',
+      text: `Your temporary password is: ${password}`,
+      html: `<h1>Your temporary password: ${password}</h1>`,
+    };
+
+    return await transport.sendMail(mailOptions);
+  } catch (error) {
+    console.error('Error sending email:', error);
+  }
+}
+
+export default sendMail;
