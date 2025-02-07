@@ -1,1 +1,54 @@
 node_modules/
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Logs en tijdelijke bestanden
+logs/
+*.log
+*.log.*
+log/
+debug.log
+error.log
+pm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Build output
+dist/
+build/
+
+# Editor-specifieke bestanden
+.vscode/
+.idea/
+.DS_Store
+
+# Cache bestanden
+.cache/
+temp/
+
+# Process bestanden
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Test coverage bestanden
+coverage/
+
+# Docker bestanden
+.dockerignore
+docker-compose.override.yml
+
+# Optional: Verwijder specifieke databasebestanden
+*.sqlite
+*.sqlite3
+db.sqlite

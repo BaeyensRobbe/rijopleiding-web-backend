@@ -21,6 +21,7 @@ model User {
   country                  String
   pickupAllowed            Boolean  @default(false)
   passwordHash             String?
+  acceptedTerms            Boolean  @default(false)
   isConfirmed              Boolean  @default(false)
   role                     Role     @default(USER)
   createdAt                DateTime @default(now())

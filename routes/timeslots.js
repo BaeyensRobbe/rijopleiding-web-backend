@@ -17,10 +17,18 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { startTime, endTime, isVisible, status } = req.body;
+
+    // Strip milliseconds from startTime and endTime by setting milliseconds to 0
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+
+    start.setMilliseconds(0);
+    end.setMilliseconds(0);
+
     const timeslot = await prisma.timeSlot.create({
       data: {
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
+        startTime: start,
+        endTime: end,
         isVisible,
         status,
       },
@@ -32,6 +40,7 @@ router.post('/', async (req, res) => {
     res.status(500).send('Error creating timeslot');
   }
 });
+
 
 router.get('/available', async (req, res) => {
   try {

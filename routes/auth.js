@@ -15,7 +15,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secretkey';
 // Register route (voor het creëren van een nieuwe gebruiker)
 router.post('/register', async (req, res) => {
   try {
-    const { firstName, lastName, email, phone, city, postalCode, street, houseNumber, temporaryLicenseExpiration, pickupAllowed } = req.body;
+    const { firstName, lastName, email, phone, city, postalCode, street, houseNumber, temporaryLicenseExpiration, pickupAllowed, acceptedTerms } = req.body;
     const user = await prisma.user.create({
       data: {
         firstName,
@@ -28,7 +28,8 @@ router.post('/register', async (req, res) => {
         houseNumber,
         country: 'Belgium',
         temporaryLicenseExpiration,
-        pickupAllowed
+        pickupAllowed,
+        acceptedTerms
       },
     });
 

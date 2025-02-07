@@ -42,4 +42,36 @@ async function sendMail(user, password) {
   }
 }
 
-export default sendMail;
+async function contact(email, subject, message) {
+  try {
+    const accessToken = await oAuth2Client.getAccessToken();
+
+    const transport = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        type: 'OAuth2',
+        user: process.env.EMAIL_USER,
+        clientId: CLIENT_ID,
+        clientSecret: CLIENT_SECRET,
+        refreshToken: REFRESH_TOKEN,
+        accessToken: accessToken,
+      },
+    });
+
+    const mailOptions = {
+      from: `Rijopleiding Baeyens <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_RIJOPLEIDING, 
+      replyTo: email,
+      subject: subject,
+      text: message,
+      html: `<p>${message}</p>`,
+    };
+
+    const result = await transport.sendMail(mailOptions);
+    return result;
+  } catch (error) {
+    console.error('Error sending email:', error);
+  }
+}
+
+export default {sendMail, contact};
