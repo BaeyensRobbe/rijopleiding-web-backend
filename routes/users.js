@@ -75,7 +75,7 @@ router.post('/:id/approve', async (req, res) => {
       },
     });
 
-    await sendMail(user, generatedPassword);
+    await sendMail.sendMail(user, generatedPassword);
 
     res.json({ message: 'User approved and password sent successfully', updatedUser });
   } catch (error) {
