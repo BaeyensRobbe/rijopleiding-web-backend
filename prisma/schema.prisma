@@ -1,7 +1,6 @@
 datasource db {
   provider = "postgresql"  
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 generator client {
@@ -25,8 +24,11 @@ model User {
   acceptedTerms            Boolean  @default(false)
   isConfirmed              Boolean  @default(false)
   role                     Role     @default(USER)
+  resetToken               String?
+  resetTokenExpiration     DateTime?
   createdAt                DateTime @default(now())
   appointments             Appointment[]
+  
 }
 
 model Appointment {
@@ -65,26 +67,26 @@ model Location {
   postalCode String
   city       String
   country    String   @default("Belgium")
-  Course     Course[]
+  // Course     Course[]
   Appointment Appointment[]
 }
 
-model Course {
-  id        Int      @id @default(autoincrement())
-  startTime DateTime
-  endTime   DateTime
-  location  Location @relation(fields: [locationId], references: [id])
-  locationId Int
-  Course_registration Course_registration[]
-  createdAt DateTime @default(now())
-}
+// model Course {
+//   id        Int      @id @default(autoincrement())
+//   startTime DateTime
+//   endTime   DateTime
+//   location  Location @relation(fields: [locationId], references: [id])
+//   locationId Int
+//   Course_registration Course_registration[]
+//   createdAt DateTime @default(now())
+// }
 
-model Course_registration {
-  id        Int      @id @default(autoincrement())
-  course    Course   @relation(fields: [courseId], references: [id])
-  courseId  Int
-  createdAt DateTime @default(now())
-}
+// model Course_registration {
+//   id        Int      @id @default(autoincrement())
+//   course    Course   @relation(fields: [courseId], references: [id])
+//   courseId  Int
+//   createdAt DateTime @default(now())
+// }
 
 enum Role {
   USER

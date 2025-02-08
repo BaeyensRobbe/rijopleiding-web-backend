@@ -75,7 +75,15 @@ router.post('/:id/approve', async (req, res) => {
       },
     });
 
-    await sendMail.sendMail(user, generatedPassword);
+    const mailOptions = {
+      from: 'Rijopleiding Baeyens <rijopleidingbaeyensinfo@gmail.com>',
+      to: user.email,
+      subject: 'Welcome!',
+      text: `Your temporary password is: ${generatedPassword}`,
+      html: `<h1>Your temporary password: ${generatedPassword}</h1>`,
+    };
+
+    await sendMail.sendMail(mailOptions);
 
     res.json({ message: 'User approved and password sent successfully', updatedUser });
   } catch (error) {
