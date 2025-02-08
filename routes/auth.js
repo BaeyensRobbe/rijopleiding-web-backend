@@ -78,6 +78,8 @@ router.post('/login', async (req, res) => {
 const authenticateJWT = (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
 
+  console.log('token here:', token);
+
   if (!token) {
     return res.status(401).send('Access Denied');
   }
@@ -110,6 +112,59 @@ router.get('/profile', authenticateJWT, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send('Error fetching user profile');
+  }
+});
+
+router.post('/change-password', authenticateJWT, async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+
+    console.log('oldPassword:', oldPassword);
+    console.log('newPassword:', newPassword);
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).send('Old and new passwords are required');
+    }
+
+    // Fetch the user from the database based on the userId from the JWT token
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+    });
+
+    console.log('user:', user);
+
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+
+    // Compare the old password with the hashed password stored in the database
+    if (!user.passwordHash) {
+      return res.status(400).send('User has no password set');
+    }
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.passwordHash);
+    console.log('oldPassword:', oldPassword);
+    console.log('passwordHash: ', user.passwordHash);
+
+    if (!isPasswordValid) {
+      return res.status(401).send('Old password is incorrect');
+    }
+
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update the user's password in the database
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash: hashedNewPassword, // Update with the new hashed password
+      },
+    });
+
+    res.json({ message: 'Password successfully updated', user: updatedUser });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error updating password');
   }
 });
 

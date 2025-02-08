@@ -65,8 +65,25 @@ model Location {
   postalCode String
   city       String
   country    String   @default("Belgium")
-
+  Course     Course[]
   Appointment Appointment[]
+}
+
+model Course {
+  id        Int      @id @default(autoincrement())
+  startTime DateTime
+  endTime   DateTime
+  location  Location @relation(fields: [locationId], references: [id])
+  locationId Int
+  Course_registration Course_registration[]
+  createdAt DateTime @default(now())
+}
+
+model Course_registration {
+  id        Int      @id @default(autoincrement())
+  course    Course   @relation(fields: [courseId], references: [id])
+  courseId  Int
+  createdAt DateTime @default(now())
 }
 
 enum Role {
