@@ -203,6 +203,8 @@ router.post('/request-password-reset', async (req, res) => {
       },
     });
 
+
+
     // Construct the email message
     const resetUrl = `${process.env.FRONTEND_URL}/authentication/reset-password?token=${resetToken}`;
     const contactUrl = `${process.env.FRONTEND_URL}/contact`;
@@ -281,5 +283,7 @@ router.post('/reset-password', async (req, res) => {
     res.status(500).send('Error resetting password');
   }
 });
+
+
 
 export default router;
