@@ -25,6 +25,8 @@ model User {
   acceptedTerms            Boolean  @default(false)
   isConfirmed              Boolean  @default(false)
   role                     Role     @default(USER)
+  resetToken               String?
+  resetTokenExpiration     DateTime?
   createdAt                DateTime @default(now())
   appointments             Appointment[]
 }
