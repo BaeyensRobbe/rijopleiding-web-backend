@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
-import sendEmail from '../utils/sendMail.js';
+import sendMail from '../utils/sendMail.js';
 
 const prisma = new PrismaClient();
 
@@ -177,10 +177,6 @@ router.post('/request-password-reset', async (req, res) => {
   try {
     const { email } = req.body;
 
-    // if (email !== req.user.email) {
-    //   return res.status(403).send('You are not authorized to reset the password for this account.');
-    // }
-
     // Find user by email
     const user = await prisma.user.findUnique({
       where: { email },
@@ -190,12 +186,10 @@ router.post('/request-password-reset', async (req, res) => {
       return res.status(404).send('User with this email does not exist.');
     }
 
-    // Generate a password reset token
     const resetToken = generateResetToken();
     const resetTokenExpiration = new Date(Date.now() + 3600000); // Token expires in 1 hour
     console.log('resetToken:', resetToken);
 
-    // Save the token and expiration to the database
     await prisma.user.update({
       where: { email },
       data: {
@@ -204,7 +198,6 @@ router.post('/request-password-reset', async (req, res) => {
       },
     });
 
-    // Construct the email message
     const resetUrl = `${process.env.FRONTEND_URL}/authentication/reset-password?token=${resetToken}`;
     const contactUrl = `${process.env.FRONTEND_URL}/contact`;
     const mailOptions = {
@@ -221,7 +214,7 @@ router.post('/request-password-reset', async (req, res) => {
 
     // Send the reset password email
     console.log('Right before sendEmail is called');
-    await sendEmail.sendMail(mailOptions);
+    await sendMail.sendMail(mailOptions);
 
     // Respond to the client with a success message
     res.json({
