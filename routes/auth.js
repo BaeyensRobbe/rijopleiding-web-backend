@@ -193,6 +193,7 @@ router.post('/request-password-reset', async (req, res) => {
     // Generate a password reset token
     const resetToken = generateResetToken();
     const resetTokenExpiration = new Date(Date.now() + 3600000); // Token expires in 1 hour
+    console.log('resetToken:', resetToken);
 
     // Save the token and expiration to the database
     await prisma.user.update({
@@ -202,8 +203,6 @@ router.post('/request-password-reset', async (req, res) => {
         resetTokenExpiration,
       },
     });
-
-
 
     // Construct the email message
     const resetUrl = `${process.env.FRONTEND_URL}/authentication/reset-password?token=${resetToken}`;
