@@ -12,5 +12,5 @@
       "dest": "server.js"
     }
   ],
-  "buildCommand": "prisma generate"
+  "buildCommand": "npx prisma generate"
 }
