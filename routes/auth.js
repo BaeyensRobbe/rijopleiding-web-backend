@@ -221,6 +221,7 @@ router.post('/request-password-reset', async (req, res) => {
     };
 
     // Send the reset password email
+    console.log('Right before sendEmail is called');
     await sendEmail.sendMail(mailOptions);
 
     // Respond to the client with a success message

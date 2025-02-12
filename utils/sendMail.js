@@ -26,7 +26,7 @@ async function sendMail(mailOptions) {
         accessToken: accessToken.token,
       },
     });
-
+    console.log(`Email to ${mailOptions.to} will be sent!`);
     return await transport.sendMail(mailOptions);
   } catch (error) {
     console.error('Error sending email:', error);
