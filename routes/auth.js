@@ -6,6 +6,9 @@ import dotenv from 'dotenv';
 import crypto from 'crypto';
 import sendMail from '../utils/sendMail.js';
 
+import { authenticateJWT } from '../utils/utils.js';
+
+
 const prisma = new PrismaClient();
 
 dotenv.config();
@@ -18,21 +21,22 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secretkey';
 // Register route (voor het creëren van een nieuwe gebruiker)
 router.post('/register', async (req, res) => {
   try {
-    const { firstName, lastName, email, phone, city, postalCode, street, houseNumber, temporaryLicenseExpiration, pickupAllowed, acceptedTerms } = req.body;
+    const { firstName, lastName, email, phone, city, postalCode, street, houseNumber, birthDate, temporaryLicenseExpiration, pickupAllowed, acceptedTerms } = req.body;
     const user = await prisma.user.create({
       data: {
-        firstName,
-        lastName,
-        email,
-        phone,
-        city,
-        postalCode,
-        street,
-        houseNumber,
-        country: 'Belgium',
-        temporaryLicenseExpiration,
-        pickupAllowed,
-        acceptedTerms
+      firstName,
+      lastName,
+      email,
+      phone,
+      city,
+      postalCode,
+      street,
+      houseNumber,
+      country: 'Belgium',
+      birthDate,
+      temporaryLicenseExpiration,
+      pickupAllowed: pickupAllowed,
+      acceptedTerms
       },
     });
 
@@ -77,23 +81,23 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Middleware om routes te beschermen met JWT
-const authenticateJWT = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
+// // Middleware om routes te beschermen met JWT
+// const authenticateJWT = (req, res, next) => {
+//   const token = req.header('Authorization')?.replace('Bearer ', '');
 
-  if (!token) {
-    return res.status(401).send('Access Denied');
-  }
+//   if (!token) {
+//     return res.status(401).send('Access Denied');
+//   }
 
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // Voeg de gedecodeerde gebruiker toe aan het verzoek
-    next(); // Ga verder naar de volgende middleware of route
-  } catch (error) {
-    console.error(error);
-    res.status(401).send('Invalid or expired token');
-  }
-};
+//   try {
+//     const decoded = jwt.verify(token, JWT_SECRET);
+//     req.user = decoded; // Voeg de gedecodeerde gebruiker toe aan het verzoek
+//     next(); // Ga verder naar de volgende middleware of route
+//   } catch (error) {
+//     console.error(error);
+//     res.status(401).send('Invalid or expired token');
+//   }
+// };
 
 // Voorbeeld van een beveiligde route die alleen toegankelijk is voor ingelogde gebruikers
 router.get('/profile', authenticateJWT, async (req, res) => {
@@ -183,7 +187,7 @@ router.post('/request-password-reset', async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).send('User with this email does not exist.');
+      return res.status(404).send('Er is nog geen account met dit e-mailadres geregistreerd');
     }
 
     const resetToken = generateResetToken();
@@ -213,7 +217,6 @@ router.post('/request-password-reset', async (req, res) => {
     };
 
     // Send the reset password email
-    console.log('Right before sendEmail is called');
     await sendMail.sendMail(mailOptions);
 
     // Respond to the client with a success message
@@ -222,7 +225,7 @@ router.post('/request-password-reset', async (req, res) => {
     });
   } catch (error) {
     console.error('error: ', error);
-    res.status(500).send('An error occurred while sending the password reset email.');
+    res.status(500).send('Er is iets fout gegaan bij het versturen van de e-mail, neem contact op met de beheerder');
   }
 });
 

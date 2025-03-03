@@ -7,6 +7,7 @@ import appointmentRoutes from './routes/appointments.js';
 import timeslotRoutes from './routes/timeslots.js';
 import locationRoutes from './routes/locations.js';
 import contactRoutes from './routes/contact.js';
+import courseRoutes from './routes/course.js';
 import emailRoutes from './routes/emailTest.js';
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use('/appointments', appointmentRoutes);
 app.use('/timeslots', timeslotRoutes);
 app.use('/locations', locationRoutes);
 app.use('/contact', contactRoutes);
+app.use('/course', courseRoutes);
 app.use('/test', emailRoutes);
 
 app.get('/', (req, res) => {

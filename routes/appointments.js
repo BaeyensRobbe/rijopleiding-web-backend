@@ -16,6 +16,28 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/upcoming', async (req, res) => {
+  try {
+    const now = new Date();
+    const appointments = await prisma.appointment.findMany({
+      where: {
+        startTime: {
+          gt: now, // Fetch only appointments with a startTime greater than the current time
+        },
+      },
+      orderBy: {
+        startTime: 'asc', // Sort by startTime in ascending order
+      },
+    });
+    res.json(appointments);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error fetching appointments');
+  }
+});
+
+
+
 router.post('/', async (req, res) => {
   try {
     const { timeSlotId, userId, locationId, customPickupStreet, customPickupHouseNumber, customPickupPostalCode, customPickupCity, startTime, endTime } = req.body;
@@ -70,10 +92,6 @@ router.delete('/:appointmentId', authenticateJWT, async (req, res) => {
 
     if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
-    }
-
-    if (appointment.userId !== userId) {
-      return res.status(403).json({ message: 'Unauthorized to cancel this appointment' });
     }
     const timeSlotId = appointment.timeSlotId;
 

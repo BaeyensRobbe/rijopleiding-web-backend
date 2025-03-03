@@ -18,6 +18,42 @@ router.post('/', async (req, res) => {
   try {
     const { startTime, endTime, isVisible, status } = req.body;
 
+    const overlappingTimeslot = await prisma.timeSlot.findFirst({
+      where: {
+      OR: [
+        {
+        startTime: {
+          lt: endTime,
+        },
+        endTime: {
+          gt: startTime,
+        },
+        },
+        {
+        startTime: {
+          lt: endTime,
+        },
+        endTime: {
+          gt: startTime,
+        },
+        },
+      ],
+      NOT: [
+        {
+        startTime: endTime,
+        },
+        {
+        endTime: startTime,
+        },
+      ],
+      },
+    });
+
+    if (overlappingTimeslot) {
+      console.log('Overlapping timeslot:', overlappingTimeslot);
+      return res.status(400).json(`Deze uren overlappen met het tijdsslot van ${new Date(overlappingTimeslot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(overlappingTimeslot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+    }
+
     // Strip milliseconds from startTime and endTime by setting milliseconds to 0
     const start = new Date(startTime);
     const end = new Date(endTime);
@@ -44,10 +80,15 @@ router.post('/', async (req, res) => {
 
 router.get('/available', async (req, res) => {
   try {
+    const now = new Date();
+
     const timeslots = await prisma.timeSlot.findMany({
       where: {
         status: 'AVAILABLE',
         isVisible: true,
+        startTime: {
+          gte: now,
+        },
       },
       orderBy: {
         startTime: 'asc',
@@ -118,6 +159,25 @@ router.put('/book/:id', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send('Error updating timeslot');
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const timeSlot = await prisma.timeSlot.findUnique({ where: { id: parseInt(id) } });
+
+    if (!timeSlot) {
+      return res.status(404).json({ message: 'TimeSlot not found' });
+    }
+
+    await prisma.timeSlot.delete({ where: { id: parseInt(id) } });
+
+    res.json({ message: 'TimeSlot deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error deleting timeslot');
   }
 });
 

@@ -1,6 +1,8 @@
 import nodemailer from 'nodemailer';
 import { OAuth2Client } from 'google-auth-library';
 import dotenv from 'dotenv';
+import fs from 'fs';
+
 dotenv.config();
 
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -11,23 +13,56 @@ const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
 const oAuth2Client = new OAuth2Client(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
 
+async function getAccessToken() {
+  try {
+    const { token, res } = await oAuth2Client.getAccessToken();
+
+    // If Google provides a new refresh token, update .env
+    if (res && res.data && res.data.refresh_token) {
+      console.log("New refresh token received, updating...");
+      process.env.REFRESH_TOKEN = res.data.refresh_token;
+
+      // Update refresh token in .env file
+      const envConfig = fs.readFileSync('.env', 'utf8').split('\n');
+      const newEnvConfig = envConfig.map(line =>
+        line.startsWith("REFRESH_TOKEN=") ? `REFRESH_TOKEN=${res.data.refresh_token}` : line
+      ).join('\n');
+      fs.writeFileSync('.env', newEnvConfig);
+    }
+
+    return token;
+  } catch (error) {
+    console.error('Error refreshing access token:', error);
+    throw error;
+  }
+}
+
 async function sendMail(mailOptions) {
   try {
-    const accessToken = await oAuth2Client.getAccessToken();
+    // const accessToken = await getAccessToken();  // Use the function that checks for expiration and refreshes
 
-    const transport = nodemailer.createTransport({
+    // const transport = nodemailer.createTransport({
+    //   service: 'gmail',
+    //   auth: {
+    //     type: 'OAuth2',
+    //     user: process.env.EMAIL_USER,
+    //     clientId: CLIENT_ID,
+    //     clientSecret: CLIENT_SECRET,
+    //     refreshToken: REFRESH_TOKEN,
+    //     accessToken: accessToken,  // Use the refreshed token here
+    //   },
+    // });
+
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        type: 'OAuth2',
         user: process.env.EMAIL_USER,
-        clientId: CLIENT_ID,
-        clientSecret: CLIENT_SECRET,
-        refreshToken: REFRESH_TOKEN,
-        accessToken: accessToken.token,
+        pass: process.env.EMAIL_PASS,
       },
     });
+
     console.log(`Email to ${mailOptions.to} will be sent!`);
-    return await transport.sendMail(mailOptions);
+    return await transporter.sendMail(mailOptions);
   } catch (error) {
     console.error('Error sending email:', error);
   }
@@ -35,34 +70,42 @@ async function sendMail(mailOptions) {
 
 async function contact(email, subject, message) {
   try {
-    const accessToken = await oAuth2Client.getAccessToken();
+    // const accessToken = await getAccessToken();  // Same here, use refreshed token
 
-    const transport = nodemailer.createTransport({
+    // const transport = nodemailer.createTransport({
+    //   service: 'gmail',
+    //   auth: {
+    //     type: 'OAuth2',
+    //     user: process.env.EMAIL_USER,
+    //     clientId: CLIENT_ID,
+    //     clientSecret: CLIENT_SECRET,
+    //     refreshToken: REFRESH_TOKEN,
+    //     accessToken: accessToken,  // Use the refreshed token here
+    //   },
+    // });
+
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        type: 'OAuth2',
         user: process.env.EMAIL_USER,
-        clientId: CLIENT_ID,
-        clientSecret: CLIENT_SECRET,
-        refreshToken: REFRESH_TOKEN,
-        accessToken: accessToken,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
     const mailOptions = {
       from: `Rijopleiding Baeyens <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_RIJOPLEIDING, 
+      to: process.env.EMAIL_RIJOPLEIDING,
       replyTo: email,
       subject: subject,
       text: message,
       html: `<p>${message}</p>`,
     };
 
-    const result = await transport.sendMail(mailOptions);
+    const result = await transporter.sendMail(mailOptions);
     return result;
   } catch (error) {
     console.error('Error sending email:', error);
   }
 }
 
-export default {sendMail, contact};
+export default { sendMail, contact };
