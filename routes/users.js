@@ -140,7 +140,7 @@ router.post('/:id/approve', async (req, res) => {
     await sendMail.sendMail(mailOptions);
     console.log('after sending mail');
 
-    res.json({ message: 'User approved and password sent successfully', updatedUser });
+    res.json({ message: 'User approved and password sent successfully', updatedUser, mailOptions });
   } catch (error) {
     console.error(error);
     res.status(500).send('Error approving user');
