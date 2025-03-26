@@ -14,7 +14,11 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: '*', // Allow all origins (or restrict to your Netlify domain)
+  methods: ['POST', 'GET'],
+  allowedHeaders: ['Content-Type']
+}));
 app.use(express.json());
 
 // Use route files
