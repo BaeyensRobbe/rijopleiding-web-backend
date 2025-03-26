@@ -9,11 +9,53 @@ const prisma = new PrismaClient();
 
 router.get('/', async (req, res) => {
   try {
-    const users = await prisma.user.findMany();
+    const users = await prisma.user.findMany({
+      orderBy: {firstName: 'asc'}
+    });
     res.json(users);
   } catch (error) {
     console.error(error);
     res.status(500).send('Error fetching users');
+  }
+});
+
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error fetching user');
+  }
+});
+
+router.put('/dashboard-update', async (req, res) => {
+  try {
+    const { id, ...updatedData } = req.body;
+
+    if (!id) {
+      return res.status(400).send('ID is required');
+    }
+
+    const updatedObject = await prisma.user.update({
+      where: {
+        id: id
+      },
+      data: updatedData
+    });
+
+    res.json(updatedObject);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error updating Object');
   }
 });
 

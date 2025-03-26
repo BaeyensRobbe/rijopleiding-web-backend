@@ -40,20 +40,29 @@ router.get('/available', async (req, res) => {
       }
     });
 
-    // Filter out courses with 26 or more registrations
-    const availableCourses = courses.filter(course => course.Course_registration.length < 26);
-    const filteredCourses = availableCourses.filter(course => {
-      const begeleiderCount = course.Course_registration.filter(reg => reg.RegistrationRole === 'BEGELEIDER').length;
-      return begeleiderCount < 20;
-    });
+    const availableCourses = courses
+      .map(course => {
+        const totalRegistrations = course.Course_registration.length;
+        const begeleiderCount = course.Course_registration.filter(reg => reg.RegistrationRole === 'BEGELEIDER').length;
 
-    
-    res.json(filteredCourses);
+        const totalAvailablePlaces = 24 - totalRegistrations;
+        const availableBegeleiderPlaces = Math.min(20 - begeleiderCount, totalAvailablePlaces); // Ensure it doesn't exceed total spots left
+
+        return {
+          ...course,
+          totalAvailablePlaces,
+          availableBegeleiderPlaces
+        };
+      })
+      .filter(course => course.totalAvailablePlaces > 0); // Only return courses that have space left
+
+    res.json(availableCourses);
   } catch (error) {
     console.error(error);
     res.status(500).send('Error fetching courses');
   }
 });
+
 
 router.get('/registration-count', async (req, res) => {
   try {
@@ -62,6 +71,9 @@ router.get('/registration-count', async (req, res) => {
         Course_registration: {
           select: { firstName: true, lastName: true, RegistrationRole: true }
         }
+      },
+      orderBy: {
+        startTime: 'asc' // Sort by startTime in ascending order
       }
     });
 
@@ -70,9 +82,9 @@ router.get('/registration-count', async (req, res) => {
       const begeleiderCount = course.Course_registration.filter(reg => reg.RegistrationRole === 'BEGELEIDER').length;
       const kandidaatCount = course.Course_registration.filter(reg => reg.RegistrationRole === 'KANDIDAAT').length;
       return {
-      ...course,
-      begeleiderCount,
-      kandidaatCount
+        ...course,
+        begeleiderCount,
+        kandidaatCount
       };
     });
 
@@ -82,6 +94,48 @@ router.get('/registration-count', async (req, res) => {
     res.status(500).send('Error fetching courses');
   }
 });
+
+router.get('/registration-count/upcoming', async (req, res) => {
+  try {
+    // Get the current date and time
+    const currentDate = new Date();
+
+    // Fetch courses with registrations
+    const courses = await prisma.course.findMany({
+      where: {
+        startTime: {
+          // Only fetch courses that have not started yet
+          gte: currentDate
+        }
+      },
+      include: {
+        Course_registration: {
+          select: { firstName: true, lastName: true, RegistrationRole: true }
+        }
+      },
+      orderBy: {
+        startTime: 'asc' // Sort by startTime in ascending order
+      }
+    });
+
+    // Modify the course data to include the count of registrations
+    const modifiedCourses = courses.map(course => {
+      const begeleiderCount = course.Course_registration.filter(reg => reg.RegistrationRole === 'BEGELEIDER').length;
+      const kandidaatCount = course.Course_registration.filter(reg => reg.RegistrationRole === 'KANDIDAAT').length;
+      return {
+        ...course,
+        begeleiderCount,
+        kandidaatCount
+      };
+    });
+
+    res.json(modifiedCourses);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error fetching future courses');
+  }
+});
+
 
 
 router.get('/:id', async (req, res) => {
@@ -222,6 +276,30 @@ router.post('/register', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send('Error registering for course');
+  }
+});
+
+router.put('/dashboard-update', async (req, res) => {
+  try {
+    const { id, ...updateData } = req.body;
+
+    if (!id) {
+      return res.status(400).send('Course ID is required');
+    }
+
+    console.log('Update Data: ', updateData);
+
+    const updatedCourse = await prisma.course.update({
+      where: {
+        id: id
+      },
+      data: updateData
+    });
+
+    res.json(updatedCourse);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error updating course');
   }
 });
 

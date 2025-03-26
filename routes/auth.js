@@ -7,6 +7,7 @@ import crypto from 'crypto';
 import sendMail from '../utils/sendMail.js';
 
 import { authenticateJWT } from '../utils/utils.js';
+import { log } from 'console';
 
 
 const prisma = new PrismaClient();
@@ -22,6 +23,12 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secretkey';
 router.post('/register', async (req, res) => {
   try {
     const { firstName, lastName, email, phone, city, postalCode, street, houseNumber, birthDate, temporaryLicenseExpiration, pickupAllowed, acceptedTerms } = req.body;
+    let acceptedTermsBoolean;
+    if (acceptedTerms === "on") {
+      acceptedTermsBoolean = true;
+    } else {
+      acceptedTermsBoolean = false;
+    }
     const user = await prisma.user.create({
       data: {
       firstName,
@@ -36,14 +43,50 @@ router.post('/register', async (req, res) => {
       birthDate,
       temporaryLicenseExpiration,
       pickupAllowed: pickupAllowed,
-      acceptedTerms
+      acceptedTerms: acceptedTermsBoolean,
       },
     });
+
+    if (user) {
+      const loginUrl = `${process.env.FRONTEND_URL}/authentication/login`;
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: process.env.EMAIL_RIJOPLEIDING,
+        subject: 'Er is een nieuwe gebruiker geregistreerd',
+        html: `
+          <p>Dag Sieg,</p>
+          <p>Er is een nieuwe gebruiker geregistreerd:</p>
+          <p>Naam: ${user.firstName} ${user.lastName}</p>
+          <p>Email: ${user.email}</p>
+          <p>Telefoonnummer: ${user.phone}</p>
+          <p>Login via: ${loginUrl}/</p>
+        `,
+      };
+  
+      // Send the reset password email
+      await sendMail.sendMail(mailOptions);
+    }
 
     res.json(user);
   } catch (error) {
     console.error(error);
     res.status(500).send('Error creating user');
+  }
+});
+
+router.get('/check-email', async (req, res) => {
+  const { email } = req.query;
+  
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+    if (user) {
+      return res.json({ exists: true }); // Email already exists
+    }
+    return res.json({ exists: false }); // Email doesn't exist
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -81,37 +124,37 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// // Middleware om routes te beschermen met JWT
-// const authenticateJWT = (req, res, next) => {
-//   const token = req.header('Authorization')?.replace('Bearer ', '');
-
-//   if (!token) {
-//     return res.status(401).send('Access Denied');
-//   }
-
-//   try {
-//     const decoded = jwt.verify(token, JWT_SECRET);
-//     req.user = decoded; // Voeg de gedecodeerde gebruiker toe aan het verzoek
-//     next(); // Ga verder naar de volgende middleware of route
-//   } catch (error) {
-//     console.error(error);
-//     res.status(401).send('Invalid or expired token');
-//   }
-// };
-
 // Voorbeeld van een beveiligde route die alleen toegankelijk is voor ingelogde gebruikers
 router.get('/profile', authenticateJWT, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
       include: {
-        appointments: true, // This will include appointments in the response
+      appointments: {
+        include: {
+        location: {
+          select: {
+          name: true,
+          },
+        }
+        
+        },
+        orderBy: {
+          startTime: 'asc',
+        },
+      },
       },
     });
 
     if (!user) {
       return res.status(404).send('User not found');
     }
+
+    user.appointments.forEach(appointment => {
+      if (!appointment.location) {
+        appointment.location = { name: 'Thuis' };
+      }
+    });
 
     res.json({ profile: user });
   } catch (error) {

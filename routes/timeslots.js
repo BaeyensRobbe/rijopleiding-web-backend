@@ -14,9 +14,40 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/upcoming', async (req, res) => {
+  try {
+    const now = new Date();
+    const timeslots = await prisma.timeSlot.findMany({
+      where: {
+        startTime: {
+          gt: now, // Fetch only appointments with a startTime greater than the current time
+        },
+      },
+      orderBy: {
+        startTime: 'asc', // Sort by startTime in ascending order
+      },
+    });
+    res.json(timeslots);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error fetching timeslots');
+  }
+});
+
+
+
 router.post('/', async (req, res) => {
   try {
     const { startTime, endTime, isVisible, status } = req.body;
+
+    console.log('Start Time:', startTime);
+    console.log('End Time:', endTime);
+
+    const isoStartTime = new Date(startTime);
+    const isoEndTime = new Date(endTime).toISOString();
+
+    console.log('ISO Start Time:', isoStartTime);
+    console.log('ISO End Time:', isoEndTime);
 
     const overlappingTimeslot = await prisma.timeSlot.findFirst({
       where: {
@@ -178,6 +209,49 @@ router.delete('/:id', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send('Error deleting timeslot');
+  }
+});
+
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const timeslot = await prisma.timeSlot.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!timeslot) {
+      return res.status(404).send('Timeslot not found');
+    }
+
+    res.json(timeslot);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error fetching timeslot');
+  }
+});
+
+
+router.put('/dashboard-update', async (req, res) => {
+  try {
+    const { id, ...updatedData } = req.body;
+
+    if (!id) {
+      return res.status(400).send('ID is required');
+    }
+
+    console.log('Updated Data: ', updatedData);
+
+    const updatedObject = await prisma.timeSlot.update({
+      where: {
+        id: id
+      },
+      data: updatedData
+    });
+
+    res.json(updatedObject);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error updating Object');
   }
 });
 

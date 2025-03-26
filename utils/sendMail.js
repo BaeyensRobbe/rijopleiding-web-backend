@@ -39,19 +39,6 @@ async function getAccessToken() {
 
 async function sendMail(mailOptions) {
   try {
-    // const accessToken = await getAccessToken();  // Use the function that checks for expiration and refreshes
-
-    // const transport = nodemailer.createTransport({
-    //   service: 'gmail',
-    //   auth: {
-    //     type: 'OAuth2',
-    //     user: process.env.EMAIL_USER,
-    //     clientId: CLIENT_ID,
-    //     clientSecret: CLIENT_SECRET,
-    //     refreshToken: REFRESH_TOKEN,
-    //     accessToken: accessToken,  // Use the refreshed token here
-    //   },
-    // });
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -70,19 +57,6 @@ async function sendMail(mailOptions) {
 
 async function contact(email, subject, message) {
   try {
-    // const accessToken = await getAccessToken();  // Same here, use refreshed token
-
-    // const transport = nodemailer.createTransport({
-    //   service: 'gmail',
-    //   auth: {
-    //     type: 'OAuth2',
-    //     user: process.env.EMAIL_USER,
-    //     clientId: CLIENT_ID,
-    //     clientSecret: CLIENT_SECRET,
-    //     refreshToken: REFRESH_TOKEN,
-    //     accessToken: accessToken,  // Use the refreshed token here
-    //   },
-    // });
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
