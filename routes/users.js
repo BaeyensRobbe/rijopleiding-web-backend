@@ -2,17 +2,17 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { PrismaClient } from '@prisma/client';
-import sendMail from '../utils/sendMail.js'; 
+import sendMail from '../utils/sendMail.js';
 
 import { authenticateJWT, authenticateJWTWithRole } from '../utils/utils.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-router.get('/',  async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const users = await prisma.user.findMany({
-      orderBy: {firstName: 'asc'}
+      orderBy: { firstName: 'asc' }
     });
     res.json(users);
   } catch (error) {
@@ -21,7 +21,7 @@ router.get('/',  async (req, res) => {
   }
 });
 
-router.get('/:id',authenticateJWT, async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   const { id } = req.params;
   try {
     const user = await prisma.user.findUnique({

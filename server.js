@@ -15,7 +15,7 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: '*', // Allow all origins (or restrict to your Netlify domain)
+  origin: 'https://baeyens-rijopleiding.netlify.app',
   methods: ['POST', 'GET'],
   allowedHeaders: ['Content-Type']
 }));
