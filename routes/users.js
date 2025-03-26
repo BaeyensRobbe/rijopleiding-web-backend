@@ -120,7 +120,7 @@ router.post('/:id/approve', async (req, res) => {
     });
 
     const mailOptions = {
-      from: 'Rijopleiding Baeyens <rijopleidingbaeyens@gmail.com>',
+      from: process.env.EMAIL_USER,
       to: user.email,
       subject: 'Welkom bij Baeyens rijopleiding!',
       text: `Beste ${user.firstName},
