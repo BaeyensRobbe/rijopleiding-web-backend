@@ -4,10 +4,12 @@ import crypto from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import sendMail from '../utils/sendMail.js'; 
 
+import { authenticateJWT, authenticateJWTWithRole } from '../utils/utils.js';
+
 const router = express.Router();
 const prisma = new PrismaClient();
 
-router.get('/', async (req, res) => {
+router.get('/',  async (req, res) => {
   try {
     const users = await prisma.user.findMany({
       orderBy: {firstName: 'asc'}
@@ -19,7 +21,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id',authenticateJWT, async (req, res) => {
   const { id } = req.params;
   try {
     const user = await prisma.user.findUnique({
@@ -37,7 +39,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.put('/dashboard-update', async (req, res) => {
+router.put('/dashboard-update', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const { id, ...updatedData } = req.body;
 
@@ -120,9 +122,19 @@ router.post('/:id/approve', async (req, res) => {
     const mailOptions = {
       from: 'Rijopleiding Baeyens <rijopleidingbaeyensinfo@gmail.com>',
       to: user.email,
-      subject: 'Welcome!',
-      text: `Your temporary password is: ${generatedPassword}`,
-      html: `<h1>Your temporary password: ${generatedPassword}</h1>`,
+      subject: 'Welkom bij Baeyens rijopleiding!',
+      text: `Beste ${user.firstName},
+      Je kan vanaf nu inloggen op de website met jouw email en het volgende wachtwoord: ${generatedPassword}
+      Wanneer je in logt zal je doorverwezen worden naar "Mijn profiel" waar je rijlessen kan inplannen en bekijken.
+      Ook is het mogelijk om je gegevens zoals je wachtwoord nog aan te passen.
+      Vriendelijke groeten,
+      Baeyens rijopleiding`,
+      html: `<p>Beste ${user.firstName},</p>
+         <p>Je kan vanaf nu inloggen op de website met jouw email en het volgende wachtwoord: ${generatedPassword}</p>
+         <p>Wanneer je in logt zal je doorverwezen worden naar "Mijn profiel" waar je rijlessen kan inplannen en bekijken.</p>
+         <p>Ook is het mogelijk om je gegevens zoals je wachtwoord nog aan te passen.</p>
+         <p>Vriendelijke groeten,</p>
+         <p>Baeyens rijopleiding</p>`,
     };
 
     await sendMail.sendMail(mailOptions);

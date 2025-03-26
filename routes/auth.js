@@ -117,7 +117,7 @@ router.post('/login', async (req, res) => {
     });
 
     // Verstuur het token naar de client
-    res.json({ message: 'Login successful', token });
+    res.json({ message: 'Login successful', token, user: { id: user.id, email: user.email, role: user.role } });
   } catch (error) {
     console.error(error);
     res.status(500).send('Error logging in');
@@ -214,6 +214,58 @@ router.post('/change-password', authenticateJWT, async (req, res) => {
   }
 });
 
+// Reset password route (for actually resetting the user's password)
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).send('Token and new password are required');
+    }
+
+    // Find the user by the reset token
+    const user = await prisma.user.findFirst({
+      where: { resetToken: token },
+    });
+
+    if (!user) {
+      return res.status(404).send('Invalid token or user not found');
+    }
+
+    // Check if the reset token has expired
+    const tokenExpiration = user.resetTokenExpiration ? new Date(user.resetTokenExpiration) : null;
+    const currentTime = new Date();
+
+    if (tokenExpiration === null) {
+      return res.status(400).send('No reset token found for this user');
+    }
+
+    if (currentTime > tokenExpiration) {
+      return res.status(400).send('The password reset token has expired');
+    }
+
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update the user's password in the database
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash: hashedNewPassword,
+        resetToken: null, // Clear the reset token after it's used
+        resetTokenExpiration: null, // Clear the expiration date after it's used
+      },
+    });
+
+    res.json({ message: 'Password successfully reset' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error resetting password');
+  }
+});
+
+
 
 const generateResetToken = () => {
   return crypto.randomBytes(32).toString('hex');
@@ -272,56 +324,6 @@ router.post('/request-password-reset', async (req, res) => {
   }
 });
 
-// Reset password route (for actually resetting the user's password)
-router.post('/reset-password', async (req, res) => {
-  try {
-    const { token, newPassword } = req.body;
-
-    if (!token || !newPassword) {
-      return res.status(400).send('Token and new password are required');
-    }
-
-    // Find the user by the reset token
-    const user = await prisma.user.findFirst({
-      where: { resetToken: token },
-    });
-
-    if (!user) {
-      return res.status(404).send('Invalid token or user not found');
-    }
-
-    // Check if the reset token has expired
-    const tokenExpiration = user.resetTokenExpiration ? new Date(user.resetTokenExpiration) : null;
-    const currentTime = new Date();
-
-    if (tokenExpiration === null) {
-      return res.status(400).send('No reset token found for this user');
-    }
-
-    if (currentTime > tokenExpiration) {
-      return res.status(400).send('The password reset token has expired');
-    }
-
-    // Hash the new password
-    const salt = await bcrypt.genSalt(10);
-    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
-
-    // Update the user's password in the database
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        passwordHash: hashedNewPassword,
-        resetToken: null, // Clear the reset token after it's used
-        resetTokenExpiration: null, // Clear the expiration date after it's used
-      },
-    });
-
-    res.json({ message: 'Password successfully reset' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Error resetting password');
-  }
-});
 
 
 

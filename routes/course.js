@@ -4,10 +4,12 @@ import sendMail from '../utils/sendMail.js';
 import { formatDate, formatTime } from '../utils/utils.js';
 import ExcelJS from 'exceljs';
 
+import { authenticateJWT ,authenticateJWTWithRole } from '../utils/utils.js';
+
 const router = express.Router();
 const prisma = new PrismaClient();
 
-router.get('/', async (req, res) => {
+router.get('/', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   try {
     const courses = await prisma.course.findMany({
       include: {
@@ -64,7 +66,7 @@ router.get('/available', async (req, res) => {
 });
 
 
-router.get('/registration-count', async (req, res) => {
+router.get('/registration-count', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const courses = await prisma.course.findMany({
       include: {
@@ -153,7 +155,7 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-router.get('/export-registrations/:id', async (req, res) => {
+router.get('/export-registrations/:id', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   try {
     const { id } = req.params;
     const registrations = await prisma.course_registration.findMany({
@@ -192,7 +194,7 @@ router.get('/export-registrations/:id', async (req, res) => {
   }
 })
 
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   try {
     const {startTime, endTime} = req.body;
     const course = await prisma.course.create({
@@ -279,7 +281,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.put('/dashboard-update', async (req, res) => {
+router.put('/dashboard-update', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   try {
     const { id, ...updateData } = req.body;
 
