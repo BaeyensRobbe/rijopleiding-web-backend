@@ -194,7 +194,7 @@ router.get('/export-registrations/:id', authenticateJWTWithRole('ADMIN'),async (
   }
 })
 
-router.post('/', authenticateJWTWithRole('ADMIN'),async (req, res) => {
+router.post('/',async (req, res) => {
   try {
     const {startTime, endTime} = req.body;
     const course = await prisma.course.create({
