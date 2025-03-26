@@ -100,6 +100,7 @@ router.put('/:id', async (req, res) => {
 });
 
 router.post('/:id/approve', async (req, res) => {
+  console.log('approve request has been callled');
   try {
     const { id } = req.params;
     const user = await prisma.user.findUnique({ where: { id: parseInt(id) } });
