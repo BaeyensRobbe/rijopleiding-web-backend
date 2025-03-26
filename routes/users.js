@@ -110,7 +110,7 @@ router.post('/:id/approve', async (req, res) => {
 
     const generatedPassword = crypto.randomBytes(4).toString('hex');
     const hashedPassword = await bcrypt.hash(generatedPassword, 10);
-
+    console.log('before update');
     const updatedUser = await prisma.user.update({
       where: { id: parseInt(id) },
       data: {
