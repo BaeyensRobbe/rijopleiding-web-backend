@@ -118,7 +118,7 @@ router.post('/:id/approve', async (req, res) => {
         passwordHash: hashedPassword,
       },
     });
-
+    console.log('before mailoptions');
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: user.email,
@@ -136,8 +136,9 @@ router.post('/:id/approve', async (req, res) => {
          <p>Vriendelijke groeten,</p>
          <p>Baeyens rijopleiding</p>`,
     };
-
+    console.log(mailOptions);
     await sendMail.sendMail(mailOptions);
+    console.log('after sending mail');
 
     res.json({ message: 'User approved and password sent successfully', updatedUser });
   } catch (error) {
