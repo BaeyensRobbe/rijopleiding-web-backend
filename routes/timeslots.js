@@ -1,5 +1,6 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import { authenticateJWTWithRole, authenticateJWT } from '../utils/utils.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -14,7 +15,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/upcoming', async (req, res) => {
+router.get('/upcoming', authenticateJWT,async (req, res) => {
   try {
     const now = new Date();
     const timeslots = await prisma.timeSlot.findMany({
@@ -36,7 +37,7 @@ router.get('/upcoming', async (req, res) => {
 
 
 
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const { startTime, endTime, isVisible, status } = req.body;
 
@@ -109,7 +110,7 @@ router.post('/', async (req, res) => {
 });
 
 
-router.get('/available', async (req, res) => {
+router.get('/available', authenticateJWT, async (req, res) => {
   try {
     const now = new Date();
 
@@ -132,7 +133,7 @@ router.get('/available', async (req, res) => {
   }
 });
 
-router.get('/byId', async (req, res) => {
+router.get('/byId', authenticateJWT, async (req, res) => {
   try {
     const { startTime } = req.query;
 
@@ -168,7 +169,7 @@ router.get('/byId', async (req, res) => {
   }
 });
 
-router.put('/book/:id', async (req, res) => {
+router.put('/book/:id', authenticateJWT, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -193,7 +194,7 @@ router.put('/book/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -212,7 +213,7 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   const { id } = req.params;
   try {
     const timeslot = await prisma.timeSlot.findUnique({
@@ -231,7 +232,7 @@ router.get('/:id', async (req, res) => {
 });
 
 
-router.put('/dashboard-update', async (req, res) => {
+router.put('/dashboard-update', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const { id, ...updatedData } = req.body;
 

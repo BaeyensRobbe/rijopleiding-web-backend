@@ -7,8 +7,6 @@ import crypto from 'crypto';
 import sendMail from '../utils/sendMail.js';
 
 import { authenticateJWT } from '../utils/utils.js';
-import { log } from 'console';
-
 
 const prisma = new PrismaClient();
 
@@ -112,7 +110,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Als het wachtwoord correct is, genereer een JWT token
-    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
+    const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, JWT_SECRET, {
       expiresIn: '1h', // Het token vervalt na 1 uur
     });
 

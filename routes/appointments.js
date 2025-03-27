@@ -1,13 +1,14 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
+import { authenticateJWTWithRole, authenticateJWT } from '../utils/utils.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'secretkey';
 const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
 
-router.get('/', async (req, res) => {
+router.get('/', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const appointments = await prisma.appointment.findMany({
       include: {
@@ -33,7 +34,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/upcoming', async (req, res) => {
+router.get('/upcoming', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   try {
     const now = new Date();
     const appointments = await prisma.appointment.findMany({
@@ -67,7 +68,7 @@ router.get('/upcoming', async (req, res) => {
   }
 });
 
-router.post('/exam', async (req, res) => {
+router.post('/exam', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const { startTime, endTime, selectedUser, location } = req.body;
 
@@ -141,7 +142,7 @@ router.post('/exam', async (req, res) => {
 
 
 
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWT, async (req, res) => {
   try {
     const { timeSlotId, userId, locationId, customPickupStreet, customPickupHouseNumber, customPickupPostalCode, customPickupCity, startTime, endTime } = req.body;
     const appointment = await prisma.appointment.create({
@@ -164,23 +165,6 @@ router.post('/', async (req, res) => {
     res.status(500).send('Error creating appointment');
   }
 });
-
-const authenticateJWT = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-
-  if (!token) {
-    return res.status(401).json({ message: 'Access Denied' });
-  }
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // Attach the user info to the request object
-    next(); // Continue with the request
-  } catch (error) {
-    console.error('JWT Error:', error);
-    return res.status(401).json({ message: 'Invalid or expired token' });
-  }
-};
 
 // 🗑️ DELETE: Cancel an appointment
 router.delete('/:appointmentId', authenticateJWT, async (req, res) => {
@@ -222,7 +206,7 @@ router.delete('/:appointmentId', authenticateJWT, async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   const { id } = req.params;
   try {
     const appointment = await prisma.appointment.findUnique({
@@ -240,7 +224,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.put('/dashboard-update', async (req, res) => {
+router.put('/dashboard-update', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const { id, ...updatedData } = req.body;
 
