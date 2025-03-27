@@ -21,7 +21,7 @@ app.use(cors({
     'http://localhost:3000',
     'https://baeyensrijopleiding.be',
     'rijopleiding-web-frontend-git-master-robbe-baeyens-projects.vercel.app',
-    'https://rijopleiding-web-frontend-robbe-baeyens-projects.vercel.app/'
+    'https://rijopleiding-web-frontend-robbe-baeyens-projects.vercel.app'
   ],
   methods: ['POST', 'GET'],
   allowedHeaders: ['Content-Type', 'Authorization']
