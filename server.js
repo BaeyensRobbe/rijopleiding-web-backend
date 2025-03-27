@@ -15,9 +15,12 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: ['https://rijopleiding-web-frontend.vercel.app', 'https://rijopleiding-web-frontend-two.vercel.app'],
+  origin: [
+    'https://rijopleiding-web-frontend.vercel.app', 
+    'https://rijopleiding-web-frontend-two.vercel.app'
+  ],
   methods: ['POST', 'GET'],
-  allowedHeaders: ['Content-Type']
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
