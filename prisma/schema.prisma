@@ -1,7 +1,7 @@
 datasource db {
   provider = "postgresql"  
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  // directUrl = env("DIRECT_URL")
 }
 
 generator client {
@@ -14,6 +14,7 @@ model User {
   lastName                 String
   email                    String   @unique
   phone                    String
+  birthDate                DateTime
   temporaryLicenseExpiration DateTime
   street                   String
   houseNumber              String
@@ -29,6 +30,7 @@ model User {
   resetTokenExpiration     DateTime?
   createdAt                DateTime @default(now())
   appointments             Appointment[]
+  
 }
 
 model Appointment {
@@ -41,6 +43,7 @@ model Appointment {
   customPickupHouseNumber String?
   customPickupPostalCode String?
   customPickupCity      String?
+  isExam                Boolean  @default(false)
   user                  User     @relation(fields: [userId], references: [id])
   userId                Int
   timeSlot              TimeSlot  @relation(fields: [timeSlotId], references: [id])
@@ -67,13 +70,43 @@ model Location {
   postalCode String
   city       String
   country    String   @default("Belgium")
-
+  // Course     Course[]
   Appointment Appointment[]
+}
+
+model Course {
+  id        Int      @id @default(autoincrement())
+  startTime DateTime
+  endTime   DateTime
+  Course_registration Course_registration[]
+  createdAt DateTime @default(now())
+}
+
+model Course_registration {
+  id                        Int      @id @default(autoincrement()) @unique
+  firstName                 String
+  lastName                  String
+  email                     String   
+  national_number           String?
+  street                    String
+  houseNumber               String
+  postalCode                String
+  city                      String
+  phone                     String
+  RegistrationRole          ResgistrationRole
+  course                    Course   @relation(fields: [courseId], references: [id])
+  courseId                  Int
+  createdAt                 DateTime @default(now())
 }
 
 enum Role {
   USER
   ADMIN
+}
+
+enum ResgistrationRole {
+  BEGELEIDER
+  KANDIDAAT
 }
 
 enum SlotStatus {
