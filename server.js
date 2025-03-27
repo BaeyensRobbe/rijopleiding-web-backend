@@ -17,7 +17,8 @@ const app = express();
 app.use(cors({
   origin: [
     'https://rijopleiding-web-frontend.vercel.app', 
-    'https://rijopleiding-web-frontend-two.vercel.app'
+    'https://rijopleiding-web-frontend-two.vercel.app',
+    'http://localhost:3000'
   ],
   methods: ['POST', 'GET'],
   allowedHeaders: ['Content-Type', 'Authorization']

@@ -9,7 +9,7 @@ import { authenticateJWT, authenticateJWTWithRole } from '../utils/utils.js';
 const router = express.Router();
 const prisma = new PrismaClient();
 
-router.get('/', async (req, res) => {
+router.get('/', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   try {
     const users = await prisma.user.findMany({
       orderBy: { firstName: 'asc' }
@@ -61,7 +61,7 @@ router.put('/dashboard-update', authenticateJWTWithRole('ADMIN'), async (req, re
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateJWT,async (req, res) => {
   const { id } = req.params;
   const updatedUser = req.body; // This will contain the fields to update
 
@@ -99,7 +99,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.post('/:id/approve', async (req, res) => {
+router.post('/:id/approve', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   console.log('approve request has been callled');
   try {
     const { id } = req.params;
@@ -148,7 +148,7 @@ router.post('/:id/approve', async (req, res) => {
   }
 });
 
-router.delete('/:id/deny', async (req, res) => {
+router.delete('/:id/deny', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.user.delete({ where: { id: parseInt(id) } });

@@ -26,7 +26,7 @@ router.get('/', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   }
 });
 
-router.get('/available', async (req, res) => {
+router.get('/available', authenticateJWT, async (req, res) => {
   try {
     const currentDate = new Date();
     const courses = await prisma.course.findMany({
@@ -66,7 +66,7 @@ router.get('/available', async (req, res) => {
 });
 
 
-router.get('/registration-count', authenticateJWTWithRole('ADMIN'), async (req, res) => {
+router.get('/registration-count', authenticateJWT, async (req, res) => {
   try {
     const courses = await prisma.course.findMany({
       include: {
@@ -97,7 +97,7 @@ router.get('/registration-count', authenticateJWTWithRole('ADMIN'), async (req, 
   }
 });
 
-router.get('/registration-count/upcoming', async (req, res) => {
+router.get('/registration-count/upcoming', authenticateJWT, async (req, res) => {
   try {
     // Get the current date and time
     const currentDate = new Date();
@@ -140,7 +140,7 @@ router.get('/registration-count/upcoming', async (req, res) => {
 
 
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   try {
     const { id } = req.params;
     const course = await prisma.course.findUnique({
@@ -194,7 +194,7 @@ router.get('/export-registrations/:id', authenticateJWTWithRole('ADMIN'),async (
   }
 })
 
-router.post('/',async (req, res) => {
+router.post('/', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const {startTime, endTime} = req.body;
     const course = await prisma.course.create({
@@ -210,7 +210,7 @@ router.post('/',async (req, res) => {
   }
 })
 
-router.post('/register', async (req, res) => {
+router.post('/register', authenticateJWT, async (req, res) => {
   try {
     const { courseId, firstName, lastName, email, phone, nationalNumber, RegistrationRole, street, houseNumber, city, postalCode } = req.body;
     const registration = await prisma.course_registration.create({
