@@ -15,7 +15,7 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: 'https://baeyens-rijopleiding.netlify.app',
+  origin: 'https://rijopleiding-web-frontend.vercel.app',
   methods: ['POST', 'GET'],
   allowedHeaders: ['Content-Type']
 }));
