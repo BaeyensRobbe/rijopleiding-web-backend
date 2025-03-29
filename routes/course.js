@@ -26,7 +26,9 @@ router.get('/', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   }
 });
 
-router.get('/available', authenticateJWT, async (req, res) => {
+// Get all courses that are available for registration (future courses)
+// No authorization needed for this route
+router.get('/available', async (req, res) => {
   try {
     const currentDate = new Date();
     const courses = await prisma.course.findMany({
@@ -65,8 +67,9 @@ router.get('/available', authenticateJWT, async (req, res) => {
   }
 });
 
-
-router.get('/registration-count', authenticateJWT, async (req, res) => {
+// Get all courses with registration counts
+// Only accessible by admin
+router.get('/registration-count', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const courses = await prisma.course.findMany({
       include: {
@@ -97,7 +100,9 @@ router.get('/registration-count', authenticateJWT, async (req, res) => {
   }
 });
 
-router.get('/registration-count/upcoming', authenticateJWT, async (req, res) => {
+// Get all fututre courses with registration counts
+// Only accessible by admin
+router.get('/registration-count/upcoming', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     // Get the current date and time
     const currentDate = new Date();
@@ -139,8 +144,10 @@ router.get('/registration-count/upcoming', authenticateJWT, async (req, res) => 
 });
 
 
-
-router.get('/:id', authenticateJWT, async (req, res) => {
+// Get course by ID
+// No authorization needed for this route
+// This route is used to fetch course details for registration
+router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const course = await prisma.course.findUnique({
@@ -155,6 +162,8 @@ router.get('/:id', authenticateJWT, async (req, res) => {
   }
 })
 
+// Get registrations for a specific course
+// Only accessible by admin
 router.get('/export-registrations/:id', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   try {
     const { id } = req.params;
@@ -194,6 +203,8 @@ router.get('/export-registrations/:id', authenticateJWTWithRole('ADMIN'),async (
   }
 })
 
+// Create a new course
+// Only accessible by admin
 router.post('/', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const {startTime, endTime} = req.body;
@@ -210,7 +221,9 @@ router.post('/', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   }
 })
 
-router.post('/register', authenticateJWT, async (req, res) => {
+// Register for a course
+// No authorization needed for this route
+router.post('/register', async (req, res) => {
   try {
     const { courseId, firstName, lastName, email, phone, nationalNumber, RegistrationRole, street, houseNumber, city, postalCode } = req.body;
     const registration = await prisma.course_registration.create({
@@ -281,6 +294,8 @@ router.post('/register', authenticateJWT, async (req, res) => {
   }
 });
 
+// Update a course
+// Only accessible by admin
 router.put('/dashboard-update', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   try {
     const { id, ...updateData } = req.body;
