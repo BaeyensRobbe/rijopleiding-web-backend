@@ -261,7 +261,7 @@ router.post('/register', async (req, res) => {
     Je bent ingeschreven voor het vormingsmoment voor begeleiders.
     
     Datum: ${formatDate(course.startTime)}
-    Tijdstip: van ${formatTime(course.startTime)} tot ${formatTime(course.endTime)}
+    Tijdstip: van 19:00 tot 22:15
     Locatie: OC Kasterlee, Binnenpad 2
     
     Gelieve onderstaande informatie aandachtig door te nemen.
@@ -316,7 +316,7 @@ router.post('/register', async (req, res) => {
         <p>Je bent ingeschreven voor het vormingsmoment voor begeleiders.</p>
     
         <p><strong>Datum:</strong> ${formatDate(course.startTime)}<br>
-        <strong>Tijdstip:</strong> van ${formatTime(course.startTime)} tot ${formatTime(course.endTime)}<br>
+        <strong>Tijdstip:</strong> van 19:00 tot 22:15<br>
         <strong>Locatie:</strong> OC Kasterlee, Binnenpad 2</p>
     
         <h3>Gelieve onderstaande informatie aandachtig door te nemen:</h3>
