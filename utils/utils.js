@@ -46,7 +46,7 @@ const authenticateJWTWithRole = (requiredRole) => (req, res, next) => {
 };
 
 const formatDate = (date) => {
-  return date.toLocaleDateString('nl-BE', { 
+  return new Date(date).toLocaleDateString('nl-BE', { 
     day: '2-digit', 
     month: '2-digit', 
     year: '2-digit' 
@@ -54,7 +54,7 @@ const formatDate = (date) => {
 };
 
 const formatTime = (date) => {
-  return date.toLocaleTimeString('nl-BE', { 
+  return new Date(date).toLocaleTimeString('nl-BE', { 
     hour: '2-digit', 
     minute: '2-digit', 
     hour12: false 
