@@ -298,7 +298,7 @@ router.post('/register', async (req, res) => {
     
     Je merkt het: Het is een ingewikkelde procedure. Gelukkig is het vormingsmoment zelf gemakkelijker.
     
-    Tenslotte nog dit: U kan niet reageren op dit mailadres. Je kan me bereiken via rijopleidingbaeyens@telenet.be.
+    Tenslotte nog dit: Je kan niet reageren op dit mailadres. Je kan me bereiken via rijopleidingbaeyens@telenet.be.
     
     Tot binnenkort!
     
@@ -359,7 +359,7 @@ router.post('/register', async (req, res) => {
     
         <p>Je merkt het: Het is een ingewikkelde procedure. Gelukkig is het vormingsmoment zelf gemakkelijker.</p>
     
-        <p>Tenslotte nog dit: U kan niet reageren op dit mailadres. Je kan me bereiken via rijopleidingbaeyens@telenet.be.</p>
+        <p>Tenslotte nog dit: Je kan niet reageren op dit mailadres. Je kan me bereiken via rijopleidingbaeyens@telenet.be.</p>
     
         <p>Tot binnenkort!</p>
     
