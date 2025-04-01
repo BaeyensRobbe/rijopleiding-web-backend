@@ -8,6 +8,8 @@ const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'secretkey';
 const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
 
+// GET: Fetch all appointments for the authenticated user
+// Only admin needs to fetch be able to fetch all appointments
 router.get('/', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const appointments = await prisma.appointment.findMany({
@@ -34,6 +36,8 @@ router.get('/', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   }
 });
 
+// GET: Fetch all upcoming appointments 
+// Only admin needs to fetch be able to fetch all appointments
 router.get('/upcoming', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   try {
     const now = new Date();
@@ -68,6 +72,8 @@ router.get('/upcoming', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   }
 });
 
+// POST: Create a new EXAM appointment
+// Only admin needs to create an exam
 router.post('/exam', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const { startTime, endTime, selectedUser, location } = req.body;
@@ -140,8 +146,8 @@ router.post('/exam', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   }
 });
 
-
-
+// POST: Create a new appointment
+// Only authenticated users can create/book an appointment
 router.post('/', authenticateJWT, async (req, res) => {
   try {
     const { timeSlotId, userId, locationId, customPickupStreet, customPickupHouseNumber, customPickupPostalCode, customPickupCity, startTime, endTime } = req.body;
@@ -167,7 +173,8 @@ router.post('/', authenticateJWT, async (req, res) => {
 });
 
 // 🗑️ DELETE: Cancel an appointment
-router.delete('/:appointmentId', authenticateJWT, async (req, res) => {
+// Only admin can cancel an appointment
+router.delete('/:appointmentId', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const { appointmentId } = req.params;
     const userId = req.user.userId; // Extract user ID from JWT
@@ -206,24 +213,27 @@ router.delete('/:appointmentId', authenticateJWT, async (req, res) => {
   }
 });
 
-router.get('/:id', authenticateJWT, async (req, res) => {
-  const { id } = req.params;
-  try {
-    const appointment = await prisma.appointment.findUnique({
-      where: { id: parseInt(id) }
-    });
 
-    if (!appointment) {
-      return res.status(404).send('Appointment not found');
-    }
+// router.get('/:id', authenticateJWT, async (req, res) => {
+//   const { id } = req.params;
+//   try {
+//     const appointment = await prisma.appointment.findUnique({
+//       where: { id: parseInt(id) }
+//     });
 
-    res.json(appointment);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Error fetching appointment');
-  }
-});
+//     if (!appointment) {
+//       return res.status(404).send('Appointment not found');
+//     }
 
+//     res.json(appointment);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send('Error fetching appointment');
+//   }
+// });
+
+// PUT: Update an appointment
+// Only admin can update an appointment
 router.put('/dashboard-update', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const { id, ...updatedData } = req.body;

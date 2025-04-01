@@ -256,33 +256,133 @@ router.post('/register', async (req, res) => {
       from: process.env.EMAIL_USER,
       to: email,
       subject: 'Bevestiging registratie vormingsmoment',
-      text: `Dag ${firstName} ${lastName},
+      text: `Beste ${firstName},
     
-    Bedankt voor je registratie voor het vormingsmoment op ${formatDate(course.startTime)}.
+    Je bent ingeschreven voor het vormingsmoment voor begeleiders.
     
-    Hier zijn de details van het evenement:
-    - Locatie: Ontmoetingscentrum Kasterlee
-    - Adres: Binnenpad 2, 2460 Kasterlee
-    - Tijd: ${formatTime(course.startTime)} - ${formatTime(course.endTime)}
+    Datum: ${formatDate(course.startTime)}
+    Tijdstip: van ${formatTime(course.startTime)} tot ${formatTime(course.endTime)}
+    Locatie: OC Kasterlee, Binnenpad 2
     
-    We kijken ernaar uit je daar te zien!
+    Gelieve onderstaande informatie aandachtig door te nemen.
     
-    Met vriendelijke groeten,  
-    Baeyens rijopleiding`,
+    1. Registratie:
+    - Elke begeleider moet zich zowel bij het begin als bij het einde van het vormingsmoment digitaal registreren.
+    - Eens de vorming gestart is, is het onmogelijk om nog iemand aan te melden.
+    - De registratie gebeurt via je smartphone en het scannen van een QR-code. Dit doe je best gewoon met je fototoestel of met een app voor het lezen van QR-codes. (De scanner van Itsme levert vaak problemen op).
+    - Na het scannen van de code, kan je je aanmelden met:
+      - Itsme
+      - Beveiligingscode via mobiele app
+      - Beveiligingscode via SMS
+      - Beveiligingscode via mail
+    
+    BELANGRIJK: De aanwezigheden worden digitaal gecontroleerd door het departement Mobiliteit en Openbare Werken (MOW). Wie te laat komt of vroeger vertrekt, krijgt geen attest en moet het vormingsmoment opnieuw volgen.
+    
+    2. Duur:
+    Het vormingsmoment duurt 3 uur. De pauze mag daarin niet meetellen. Het vormingsmoment zal daarom eindigen rond 22u15.
+    
+    3. Lokaal:
+    Het vormingsmoment gaat door in lokaal “De Pompier” op de eerste verdieping van het OC Kasterlee. (Binnenpad 2 – ingang via de Karekietstraat of via de ondergrondse parkeergarage (gratis – validatie parkeerticket op het gelijkvloers))
+    
+    4. Betaling:
+    Gelieve 20 euro per begeleider over te schrijven op rekening: BE67 3631 1612 3487 van Baeyens Rijopleiding, met vermelding van je voornaam, naam en de datum van het vormingsmoment. Het aantal plaatsen per cursus is beperkt. Inschrijvingen waarvoor na 4 werkdagen nog geen betaling werd ontvangen, zullen daarom geannuleerd worden.
+    
+    5. Attest:
+    Je ontvangt op het einde van het vormingsmoment een attest als bewijs. Dit attest blijft 10 jaar geldig en moet getoond worden bij het praktijkexamen.
+    
+    Samengevat:
+    1. Kom op tijd. We starten de registratie van aanwezigen 10 min voor het begin van het vormingsmoment, dus vanaf 18u50.
+    2. Vergeet je smartphone niet.
+    3. Kijk vooraf na of je een QR-code kan scannen met je gsm.
+    4. Zijn er onvoorziene omstandigheden op de avond van het vormingsmoment, gelieve me dan zo snel mogelijk te contacteren op 0486/ 71 48 32
+    
+    Je merkt het: Het is een ingewikkelde procedure. Gelukkig is het vormingsmoment zelf gemakkelijker.
+    
+    Tenslotte nog dit: U kan niet reageren op dit mailadres. Je kan me bereiken via rijopleidingbaeyens@telenet.be.
+    
+    Tot binnenkort!
+    
+    Met vriendelijke groeten,
+    Sieg Baeyens
+    Hoogblok 11
+    2460 Kasterlee
+    0486 71 43 82
+    rijopleidingbaeyens@telenet.be
+    www.baeyensrijopleiding.be`,
+    
       html: `
-      <p>Dag ${firstName} ${lastName},</p>
-      <p>Bedankt voor je registratie voor het vormingsmoment op <strong>${formatDate(course.startTime)}</strong>.</p>
-      <p>Hier zijn de details van het evenement:</p>
-      <ul>
-        <li><strong>Locatie:</strong> Ontmoetingscentrum Kasterlee</li>
-        <li><strong>Adres:</strong> Binnenpad 2, 2460 Kasterlee</li>
-        <li><strong>Tijd:</strong> ${formatTime(course.startTime)} - ${formatTime(course.endTime)}</li>
-      </ul>
-      <p>We kijken ernaar uit je daar te zien!</p>
-      <p>Met vriendelijke groeten,</p>
-      <p>Baeyens rijopleiding</p>
-      `
+        <p>Beste ${firstName},</p>
+    
+        <p>Je bent ingeschreven voor het vormingsmoment voor begeleiders.</p>
+    
+        <p><strong>Datum:</strong> ${formatDate(course.startTime)}<br>
+        <strong>Tijdstip:</strong> van ${formatTime(course.startTime)} tot ${formatTime(course.endTime)}<br>
+        <strong>Locatie:</strong> OC Kasterlee, Binnenpad 2</p>
+    
+        <h3>Gelieve onderstaande informatie aandachtig door te nemen:</h3>
+        
+        <h4>1. Registratie:</h4>
+        <ul>
+          <li>Elke begeleider moet zich zowel bij het begin als bij het einde van het vormingsmoment digitaal registreren.</li>
+          <li>Eens de vorming gestart is, is het onmogelijk om nog iemand aan te melden.</li>
+          <li>De registratie gebeurt via je smartphone en het scannen van een QR-code. Dit doe je best gewoon met je fototoestel of met een app voor het lezen van QR-codes. (De scanner van Itsme levert vaak problemen op).</li>
+          <li>Na het scannen van de code, kan je je aanmelden met:</li>
+          <ul>
+            <li>Itsme</li>
+            <li>Beveiligingscode via mobiele app</li>
+            <li>Beveiligingscode via SMS</li>
+            <li>Beveiligingscode via mail</li>
+          </ul>
+        </ul>
+    
+        <p><strong style="color: red;">BELANGRIJK:</strong> De aanwezigheden worden digitaal gecontroleerd door het departement Mobiliteit en Openbare Werken (MOW). Wie te laat komt of vroeger vertrekt, krijgt geen attest en moet het vormingsmoment opnieuw volgen.</p>
+        
+        <h4>2. Duur:</h4>
+        <p>Het vormingsmoment duurt 3 uur. De pauze mag daarin niet meetellen. Het vormingsmoment zal daarom eindigen rond 22u15.</p>
+    
+        <h4>3. Lokaal:</h4>
+        <p>Het vormingsmoment gaat door in lokaal “De Pompier” op de eerste verdieping van het OC Kasterlee. (Binnenpad 2 – ingang via de Karekietstraat of via de ondergrondse parkeergarage (gratis – validatie parkeerticket op het gelijkvloers))</p>
+    
+        <h4>4. Betaling:</h4>
+        <p>Gelieve 20 euro per begeleider over te schrijven op rekening: BE67 3631 1612 3487 van Baeyens Rijopleiding, met vermelding van je voornaam, naam en de datum van het vormingsmoment. Het aantal plaatsen per cursus is beperkt. Inschrijvingen waarvoor na 4 werkdagen nog geen betaling werd ontvangen, zullen daarom geannuleerd worden.</p>
+    
+        <h4>5. Attest:</h4>
+        <p>Je ontvangt op het einde van het vormingsmoment een attest als bewijs. Dit attest blijft 10 jaar geldig en moet getoond worden bij het praktijkexamen.</p>
+    
+        <h3>Samengevat:</h3>
+        <ul>
+          <li>Kom op tijd. We starten de registratie van aanwezigen 10 min voor het begin van het vormingsmoment, dus vanaf 18u50.</li>
+          <li>Vergeet je smartphone niet.</li>
+          <li>Kijk vooraf na of je een QR-code kan scannen met je gsm.</li>
+          <li>Zijn er onvoorziene omstandigheden op de avond van het vormingsmoment, gelieve me dan zo snel mogelijk te contacteren op 0486/ 71 48 32.</li>
+        </ul>
+    
+        <p>Je merkt het: Het is een ingewikkelde procedure. Gelukkig is het vormingsmoment zelf gemakkelijker.</p>
+    
+        <p>Tenslotte nog dit: U kan niet reageren op dit mailadres. Je kan me bereiken via rijopleidingbaeyens@telenet.be.</p>
+    
+        <p>Tot binnenkort!</p>
+    
+        <p>Met vriendelijke groeten,<br>
+        Sieg Baeyens<br>
+        Hoogblok 11<br>
+        2460 Kasterlee<br>
+        0486 71 43 82<br>
+        rijopleidingbaeyens@telenet.be<br>
+        <a href="http://www.baeyensrijopleiding.be">www.baeyensrijopleiding.be</a></p>
+    
+        <p><img src="cid:image1" alt="Image 1" width="200" height="58" /></p>
+      `,
+      attachments: [
+        {
+          filename: 'logo.jpg',
+          path: 'public/images/logo-new.png', // path to the image file
+          cid: 'image1' // this links the image to the email's HTML
+        },
+      ]
     };
+    
+    
 
     await sendMail.sendMail(mailOptions);
     

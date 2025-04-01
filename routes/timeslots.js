@@ -5,7 +5,10 @@ import { authenticateJWTWithRole, authenticateJWT } from '../utils/utils.js';
 const router = express.Router();
 const prisma = new PrismaClient();
 
-router.get('/', async (req, res) => {
+// GET: Fetch all timeslots
+// Only admin needs to fetch be able to fetch all timeslots
+// This route is protected by the authenticateJWTWithRole middleware
+router.get('/', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   try {
     const timeslots = await prisma.timeSlot.findMany({ orderBy: { startTime: 'asc' } });
     res.json(timeslots);
@@ -15,7 +18,10 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/upcoming', authenticateJWT,async (req, res) => {
+// GET: Fetch all upcoming timeslots
+// Only admin needs to fetch be able to fetch all timeslots
+// This route is protected by the authenticateJWTWithRole middleware
+router.get('/upcoming', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   try {
     const now = new Date();
     const timeslots = await prisma.timeSlot.findMany({
@@ -35,8 +41,9 @@ router.get('/upcoming', authenticateJWT,async (req, res) => {
   }
 });
 
-
-
+// POST: Create a new timeslot
+// Only admin needs to be able to create a new timeslot
+// This route is protected by the authenticateJWTWithRole middleware
 router.post('/', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const { startTime, endTime, isVisible, status } = req.body;
@@ -109,7 +116,9 @@ router.post('/', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   }
 });
 
-
+// GET: Fetch all available timeslots
+// Only authenticated users can access this route
+// This route is protected by the authenticateJWT middleware
 router.get('/available', authenticateJWT, async (req, res) => {
   try {
     const now = new Date();
@@ -133,7 +142,10 @@ router.get('/available', authenticateJWT, async (req, res) => {
   }
 });
 
-router.get('/byId', authenticateJWT, async (req, res) => {
+// GET: Fetch a timeslot by startTime
+// Only admin can access this route, used for editing appointment location
+// This route is protected by the authenticateJWTWithRole middleware
+router.get('/byId', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const { startTime } = req.query;
 
@@ -169,6 +181,9 @@ router.get('/byId', authenticateJWT, async (req, res) => {
   }
 });
 
+// PUT: Update a timeslot
+// Only authenticated users can access this route, used for booking a timeslot / appointment
+// This route is protected by the authenticateJWT middleware
 router.put('/book/:id', authenticateJWT, async (req, res) => {
   try {
     const { id } = req.params;
@@ -194,6 +209,9 @@ router.put('/book/:id', authenticateJWT, async (req, res) => {
   }
 });
 
+// DELETE: Delete a timeslot
+// Only admin can access this route, used for deleting a timeslot
+// This route is protected by the authenticateJWTWithRole middleware
 router.delete('/:id', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   try {
     const { id } = req.params;
@@ -213,7 +231,10 @@ router.delete('/:id', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   }
 });
 
-router.get('/:id', authenticateJWT, async (req, res) => {
+// GET: Fetch a timeslot by ID
+// Only admin can access this route
+// This route is protected by the authenticateJWTWithRole middleware
+router.get('/:id', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   const { id } = req.params;
   try {
     const timeslot = await prisma.timeSlot.findUnique({
@@ -231,7 +252,9 @@ router.get('/:id', authenticateJWT, async (req, res) => {
   }
 });
 
-
+// PUT: Update a timeslot
+// Only admin can access this route
+// This route is protected by the authenticateJWTWithRole middleware
 router.put('/dashboard-update', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const { id, ...updatedData } = req.body;

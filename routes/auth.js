@@ -17,16 +17,12 @@ const router = express.Router();
 // SECRET KEY voor JWT (te plaatsen in .env bestand)
 const JWT_SECRET = process.env.JWT_SECRET || 'secretkey';
 
-// Register route (voor het creëren van een nieuwe gebruiker)
+// POST: Registratie van een nieuwe gebruiker
+// Deze route is toegankelijk voor iedereen
 router.post('/register', async (req, res) => {
   try {
     const { firstName, lastName, email, phone, city, postalCode, street, houseNumber, birthDate, temporaryLicenseExpiration, pickupAllowed, acceptedTerms } = req.body;
-    let acceptedTermsBoolean;
-    if (acceptedTerms === "on") {
-      acceptedTermsBoolean = true;
-    } else {
-      acceptedTermsBoolean = false;
-    }
+    
     const user = await prisma.user.create({
       data: {
       firstName,
@@ -41,7 +37,7 @@ router.post('/register', async (req, res) => {
       birthDate,
       temporaryLicenseExpiration,
       pickupAllowed: pickupAllowed,
-      acceptedTerms: acceptedTermsBoolean,
+      acceptedTerms,
       },
     });
 
@@ -72,6 +68,8 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// GET: Controleer of een email al bestaat in de database
+// Deze route is toegankelijk voor iedereen (bijvoorbeeld voor registratie)
 router.get('/check-email', async (req, res) => {
   const { email } = req.query;
   
@@ -88,7 +86,8 @@ router.get('/check-email', async (req, res) => {
   }
 });
 
-// Login route (voor het inloggen van een gebruiker)
+// POST: Inloggen van een gebruiker
+// Deze route is toegankelijk voor iedereen
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -122,7 +121,9 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Voorbeeld van een beveiligde route die alleen toegankelijk is voor ingelogde gebruikers
+// GET: Ophalen van de profielinformatie van de ingelogde gebruiker
+// Deze route is beveiligd met JWT-authenticatie
+// Alleen ingelogde gebruikers kunnen hun profielinformatie ophalen
 router.get('/profile', authenticateJWT, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
@@ -161,6 +162,9 @@ router.get('/profile', authenticateJWT, async (req, res) => {
   }
 });
 
+// POST: Wijzig wachtwoord van de ingelogde gebruiker
+// Deze route is beveiligd met JWT-authenticatie
+// Alleen ingelogde gebruikers kunnen hun wachtwoord wijzigen
 router.post('/change-password', authenticateJWT, async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
@@ -212,7 +216,9 @@ router.post('/change-password', authenticateJWT, async (req, res) => {
   }
 });
 
-// Reset password route (for actually resetting the user's password)
+// POST: Reset wachtwoord
+// Deze route is toegankelijk voor iedereen
+// Gebruikers kunnen hun wachtwoord resetten met een token dat naar hun e-mailadres is verzonden 
 router.post('/reset-password', async (req, res) => {
   try {
     const { token, newPassword } = req.body;
@@ -269,7 +275,9 @@ const generateResetToken = () => {
   return crypto.randomBytes(32).toString('hex');
 };
 
-// Create the reset password request endpoint
+// POST: Verzoek om wachtwoord reset
+// Deze route is toegankelijk voor iedereen
+// Gebruikers kunnen een verzoek indienen om hun wachtwoord te resetten door hun e-mailadres op te geven
 router.post('/request-password-reset', async (req, res) => {
   try {
     const { email } = req.body;
@@ -321,8 +329,5 @@ router.post('/request-password-reset', async (req, res) => {
     res.status(500).send('Er is iets fout gegaan bij het versturen van de e-mail, neem contact op met de beheerder');
   }
 });
-
-
-
 
 export default router;

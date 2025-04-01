@@ -1,7 +1,6 @@
   import nodemailer from 'nodemailer';
   import { OAuth2Client } from 'google-auth-library';
   import dotenv from 'dotenv';
-  import fs from 'fs';
 
   dotenv.config();
 
@@ -12,30 +11,6 @@
 
   const oAuth2Client = new OAuth2Client(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
   oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
-
-  async function getAccessToken() {
-    try {
-      const { token, res } = await oAuth2Client.getAccessToken();
-
-      // If Google provides a new refresh token, update .env
-      if (res && res.data && res.data.refresh_token) {
-        console.log("New refresh token received, updating...");
-        process.env.REFRESH_TOKEN = res.data.refresh_token;
-
-        // Update refresh token in .env file
-        const envConfig = fs.readFileSync('.env', 'utf8').split('\n');
-        const newEnvConfig = envConfig.map(line =>
-          line.startsWith("REFRESH_TOKEN=") ? `REFRESH_TOKEN=${res.data.refresh_token}` : line
-        ).join('\n');
-        fs.writeFileSync('.env', newEnvConfig);
-      }
-
-      return token;
-    } catch (error) {
-      console.error('Error refreshing access token:', error);
-      throw error;
-    }
-  }
 
   async function sendMail(mailOptions) {
     try {
@@ -52,6 +27,7 @@
       return await transporter.sendMail(mailOptions);
     } catch (error) {
       console.error('Error sending email:', error);
+      throw new Error('Failed to send email');
     }
   }
 

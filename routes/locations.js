@@ -1,10 +1,14 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import { authenticateJWT, authenticateJWTWithRole } from '../utils/utils.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-router.get('/', async (req, res) => {
+// GET: Fetch all locations
+// Only authenticated users can access this route
+// This route is protected by the authenticateJWT middleware
+router.get('/', authenticateJWT,async (req, res) => {
   try {
     const { name } = req.query;
 
@@ -30,7 +34,10 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+// GET: Fetch a location by ID
+// Only admin can access this route, used for editing appointment location
+// This route is protected by the authenticateJWTWithRole middleware
+router.get('/:id', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   const { id } = req.params;
   try {
     const location = await prisma.location.findUnique({
@@ -48,7 +55,10 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.get('/name/:name', async (req, res) => {
+// GET: Fetch a location by name
+// Only admin can access this route, used for editing appointment location
+// This route is protected by the authenticateJWTWithRole middleware
+router.get('/name/:name', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   const { name } = req.params;
   try {
     const location = await prisma.location.findFirst({

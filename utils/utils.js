@@ -5,10 +5,12 @@ const authenticateJWT = (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
 
   if (!token) {
+    console.log('No token provided');
     return res.status(401).send('Access Denied');
   }
 
   try {
+    console.log('Token:', token);
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded; // Voeg de gedecodeerde gebruiker toe aan het verzoek
     next(); // Ga verder naar de volgende middleware of route
@@ -22,10 +24,12 @@ const authenticateJWTWithRole = (requiredRole) => (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
 
   if (!token) {
+    console.log('No token provided');
     return res.status(401).send('Access Denied');
   }
 
   try {
+    console.log('Token:', token);
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
 

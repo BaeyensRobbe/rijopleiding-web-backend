@@ -9,6 +9,9 @@ import { authenticateJWT, authenticateJWTWithRole } from '../utils/utils.js';
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// GET: Fetch all users
+// Only admin needs to be able to fetch all users
+// This route is protected by the authenticateJWTWithRole middleware
 router.get('/', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   try {
     const users = await prisma.user.findMany({
@@ -21,6 +24,9 @@ router.get('/', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   }
 });
 
+// GET: Get a user by ID
+// Only authenticated users can access their own data
+// This route is protected by the authenticateJWT middleware
 router.get('/:id', authenticateJWT, async (req, res) => {
   const { id } = req.params;
   try {
@@ -39,6 +45,9 @@ router.get('/:id', authenticateJWT, async (req, res) => {
   }
 });
 
+// PUT: Update a user
+// Only admin needs to be able to update users
+// This route is protected by the authenticateJWTWithRole middleware
 router.put('/dashboard-update', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const { id, ...updatedData } = req.body;
@@ -61,6 +70,9 @@ router.put('/dashboard-update', authenticateJWTWithRole('ADMIN'), async (req, re
   }
 });
 
+// PUT: Update a user by ID
+// Only authenticated users can update their own data
+// This route is protected by the authenticateJWT middleware
 router.put('/:id', authenticateJWT,async (req, res) => {
   const { id } = req.params;
   const updatedUser = req.body; // This will contain the fields to update
@@ -99,6 +111,9 @@ router.put('/:id', authenticateJWT,async (req, res) => {
   }
 });
 
+// POST: Approve a user
+// Only admin can approve users
+// This route is protected by the authenticateJWTWithRole middleware
 router.post('/:id/approve', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   console.log('approve request has been callled');
   try {
@@ -148,6 +163,9 @@ router.post('/:id/approve', authenticateJWTWithRole('ADMIN'),async (req, res) =>
   }
 });
 
+// DELETE: Deny a user
+// Only admin can deny users
+// This route is protected by the authenticateJWTWithRole middleware
 router.delete('/:id/deny', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   try {
     const { id } = req.params;

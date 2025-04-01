@@ -8,7 +8,6 @@ import timeslotRoutes from './routes/timeslots.js';
 import locationRoutes from './routes/locations.js';
 import contactRoutes from './routes/contact.js';
 import courseRoutes from './routes/course.js';
-import emailRoutes from './routes/emailTest.js';
 
 dotenv.config();
 
@@ -22,7 +21,7 @@ app.use(cors({
     'https://baeyensrijopleiding.be',
     'rijopleiding-web-frontend-git-master-robbe-baeyens-projects.vercel.app',
   ],
-  methods: ['POST', 'GET'],
+  methods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
@@ -35,7 +34,6 @@ app.use('/timeslots', timeslotRoutes);
 app.use('/locations', locationRoutes);
 app.use('/contact', contactRoutes);
 app.use('/course', courseRoutes);
-app.use('/test', emailRoutes);
 
 app.get('/', (req, res) => {
   res.send('Backend is live!');
