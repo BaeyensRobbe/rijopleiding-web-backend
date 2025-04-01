@@ -5,6 +5,8 @@ import contact from '../utils/sendMail.js';
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// POST: Send contact email
+// No authentication needed for this route
 router.post('/', async (req, res) => {
   const { email, subject, message } = req.body;
   if (!email || !subject || !message) {
