@@ -43,12 +43,13 @@
       });
 
       const mailOptions = {
-        from: `Rijopleiding Baeyens <${process.env.EMAIL_USER}>`,
+        from: `${email}`,
         to: process.env.EMAIL_RIJOPLEIDING,
         replyTo: email,
         subject: subject,
         text: message,
-        html: `<p>${message}</p>`,
+        html: `<p>${message}</p>
+               <p>From: ${email}</p>`,
       };
 
       const result = await transporter.sendMail(mailOptions);
