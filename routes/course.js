@@ -298,7 +298,7 @@ router.post('/register', async (req, res) => {
     
     Je merkt het: Het is een ingewikkelde procedure. Gelukkig is het vormingsmoment zelf gemakkelijker.
     
-    Tenslotte nog dit: Je kan niet reageren op dit mailadres. Je kan me bereiken via rijopleidingbaeyens@telenet.be.
+    Tenslotte nog dit: Je kan niet reageren op dit mailadres. Je kan me bereiken via info@baeyensrijopleiding.be.
     
     Tot binnenkort!
     
@@ -307,7 +307,7 @@ router.post('/register', async (req, res) => {
     Hoogblok 11
     2460 Kasterlee
     0486 71 43 82
-    rijopleidingbaeyens@telenet.be
+    info@baeyensrijopleiding.be
     www.baeyensrijopleiding.be`,
     
       html: `
@@ -359,7 +359,7 @@ router.post('/register', async (req, res) => {
     
         <p>Je merkt het: Het is een ingewikkelde procedure. Gelukkig is het vormingsmoment zelf gemakkelijker.</p>
     
-        <p>Tenslotte nog dit: Je kan niet reageren op dit mailadres. Je kan me bereiken via rijopleidingbaeyens@telenet.be.</p>
+        <p>Tenslotte nog dit: Je kan niet reageren op dit mailadres. Je kan me bereiken via info@baeyensrijopleiding.be.</p>
     
         <p>Tot binnenkort!</p>
     
@@ -368,7 +368,7 @@ router.post('/register', async (req, res) => {
         Hoogblok 11<br>
         2460 Kasterlee<br>
         0486 71 43 82<br>
-        rijopleidingbaeyens@telenet.be<br>
+        info@baeyensrijopleiding.be<br>
         <a href="http://www.baeyensrijopleiding.be">www.baeyensrijopleiding.be</a></p>
     
         <p><img src="cid:image1" alt="Image 1" width="200" height="58" /></p>
