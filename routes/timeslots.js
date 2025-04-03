@@ -145,7 +145,7 @@ router.get('/available', authenticateJWT, async (req, res) => {
 // GET: Fetch a timeslot by startTime
 // Only admin can access this route, used for editing appointment location
 // This route is protected by the authenticateJWTWithRole middleware
-router.get('/byId', authenticateJWTWithRole('ADMIN'), async (req, res) => {
+router.get('/byId', authenticateJWT, async (req, res) => {
   try {
     const { startTime } = req.query;
 
