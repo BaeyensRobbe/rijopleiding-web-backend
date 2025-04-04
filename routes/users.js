@@ -139,18 +139,22 @@ router.post('/:id/approve', authenticateJWTWithRole('ADMIN'),async (req, res) =>
       from: process.env.EMAIL_USER,
       to: user.email,
       subject: 'Welkom bij Baeyens rijopleiding!',
-      text: `Beste ${user.firstName},
-      Je kan vanaf nu inloggen op de website met jouw email en het volgende wachtwoord: ${generatedPassword}
-      Wanneer je in logt zal je doorverwezen worden naar "Mijn profiel" waar je rijlessen kan inplannen en bekijken.
-      Ook is het mogelijk om je gegevens zoals je wachtwoord nog aan te passen.
-      Vriendelijke groeten,
+      text: `Beste ${user.firstName},\nWelkom bij Baeyens Rijopleiding! We hebben een account voor je aangemaakt.Vanaf nu kan je aanmelden op ${process.env.FRONTEND_URL} met je email en het volgende wachtwoord: ${generatedPassword}\n\n      
+      Om aan te melden klik je op de blauwe knop 'Mijn rijlessen' op de home-pagina. Je zal doorverwezen worden naar "Mijn Account" waar je rijlessen kan inplannen en bekijken.
+      Ook is het mogelijk om je gegevens zoals je wachtwoord nog aan te passen.\n
+      
+      Met vriendelijke groet,
       Baeyens rijopleiding`,
       html: `<p>Beste ${user.firstName},</p>
-         <p>Je kan vanaf nu inloggen op de website met jouw email en het volgende wachtwoord: ${generatedPassword}</p>
-         <p>Wanneer je in logt zal je doorverwezen worden naar "Mijn profiel" waar je rijlessen kan inplannen en bekijken.</p>
-         <p>Ook is het mogelijk om je gegevens zoals je wachtwoord nog aan te passen.</p>
-         <p>Vriendelijke groeten,</p>
-         <p>Baeyens rijopleiding</p>`,
+        <br/>
+       <p>Welkom bij Baeyens Rijopleiding! We hebben een account voor je aangemaakt.</p>
+       <p>Vanaf nu kan je aanmelden op <a href="${process.env.FRONTEND_URL}">${process.env.FRONTEND_URL}</a> met je email en het volgende wachtwoord: ${generatedPassword}</p>
+       <br/>
+       <p>Om aan te melden klik je op de blauwe knop 'Mijn rijlessen' op de home-pagina. Je zal doorverwezen worden naar "Mijn Account" waar je rijlessen kan inplannen en bekijken.</p>
+       <p>Ook is het mogelijk om je gegevens zoals je wachtwoord nog aan te passen.</p>
+       <br/>
+       <p>Met vriendelijke groet,</p>
+       <p>Baeyens rijopleiding</p>`,
     };
     console.log(mailOptions);
     await sendMail.sendMail(mailOptions);
