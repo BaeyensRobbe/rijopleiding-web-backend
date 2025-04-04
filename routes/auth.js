@@ -291,6 +291,10 @@ router.post('/request-password-reset', async (req, res) => {
       return res.status(404).send('Er is nog geen account met dit e-mailadres geregistreerd');
     }
 
+    if (user.isConfirmed === false) {
+      return res.status(403).send('Je account is nog niet bevestigd. Wanneer je account bevestigd is, krijg je een e-mail met een wachtwoord. Neem contact op voor meer informatie.');
+    }
+
     const resetToken = generateResetToken();
     const resetTokenExpiration = new Date(Date.now() + 3600000); // Token expires in 1 hour
     console.log('resetToken:', resetToken);
