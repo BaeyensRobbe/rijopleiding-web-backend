@@ -200,6 +200,8 @@ router.delete('/:appointmentId', authenticateJWTWithRole('ADMIN'), async (req, r
       where: { id: parseInt(appointmentId) },
     });
 
+    const isExamen = appointment?.isExam || false; // Check if the appointment is an exam
+
     if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
     }
@@ -212,14 +214,20 @@ router.delete('/:appointmentId', authenticateJWTWithRole('ADMIN'), async (req, r
     
     console.log(timeSlotId);
     if (timeSlotId) {
-      await prisma.timeSlot.update({
-        where: { id: timeSlotId },
-        data: { 
-          status: 'AVAILABLE',
-          isVisible: true,
-          appointmentId: null,
-         },
-      });
+      if (isExamen) {
+        await prisma.timeSlot.delete({
+          where: { id: timeSlotId },
+        });
+      } else {
+        await prisma.timeSlot.update({
+          where: { id: timeSlotId },
+          data: { 
+            status: 'AVAILABLE',
+            isVisible: true,
+            appointmentId: null,
+          },
+        });
+      }
     }
 
     return res.status(200).json({ message: 'Appointment cancelled successfully' });
