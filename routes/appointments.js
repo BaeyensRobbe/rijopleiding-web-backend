@@ -81,24 +81,40 @@ router.post('/exam', authenticateJWTWithRole('ADMIN'), async (req, res) => {
     if (!startTime || !endTime || !selectedUser || !location) {
       return res.status(400).json({ message: 'Alle velden zijn verplicht.' });
     }
-    const response = await fetch(`${backendUrl}/timeslots`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    // Check for overlapping time slots
+    const overlappingTimeSlot = await prisma.timeSlot.findFirst({
+      where: {
+      OR: [
+        {
+        startTime: {
+          lt: new Date(endTime),
+        },
+        endTime: {
+          gt: new Date(startTime),
+        },
+        }
+      ]
       },
-      body: JSON.stringify({
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
-        isVisible: false,
-        status: 'BOOKED',
-      }),
     });
 
-    if (!response.ok) {
+    if (overlappingTimeSlot) {
+      return res.status(400).json({ message: 'Time slot overlaps with an already existing time slot.' });
+    }
+
+    // Create a new time slot
+    const newTimeSlot = await prisma.timeSlot.create({
+      data: {
+      startTime: new Date(startTime),
+      endTime: new Date(endTime),
+      isVisible: false,
+      status: 'BOOKED',
+      },
+    });
+
+    if (!newTimeSlot) {
       throw new Error('Failed to create time slot');
     }
 
-    const timeSlot = await response.json();
     let appointment = {};
     // Create a new Appointment linked to the TimeSlot and User
     if (location === 'Thuis ophalen') {
@@ -110,7 +126,7 @@ router.post('/exam', authenticateJWTWithRole('ADMIN'), async (req, res) => {
           startTime: new Date(startTime),
           endTime: new Date(endTime),
           userId: selectedUser,
-          timeSlotId: timeSlot.id,
+          timeSlotId: newTimeSlot.id,
           customPickupCity: user?.city,
           customPickupPostalCode: user?.postalCode,
           customPickupStreet: user?.street,
@@ -128,7 +144,7 @@ router.post('/exam', authenticateJWTWithRole('ADMIN'), async (req, res) => {
           startTime: new Date(startTime),
           endTime: new Date(endTime),
           userId: selectedUser,
-          timeSlotId: timeSlot.id,
+          timeSlotId: newTimeSlot.id,
           locationId: locationObject?.id,
           customPickupCity: locationObject?.city,
           customPickupPostalCode: locationObject?.postalCode,
@@ -214,23 +230,23 @@ router.delete('/:appointmentId', authenticateJWTWithRole('ADMIN'), async (req, r
 });
 
 
-// router.get('/:id', authenticateJWT, async (req, res) => {
-//   const { id } = req.params;
-//   try {
-//     const appointment = await prisma.appointment.findUnique({
-//       where: { id: parseInt(id) }
-//     });
+router.get('/:id', authenticateJWT, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: parseInt(id) }
+    });
 
-//     if (!appointment) {
-//       return res.status(404).send('Appointment not found');
-//     }
+    if (!appointment) {
+      return res.status(404).send('Appointment not found');
+    }
 
-//     res.json(appointment);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send('Error fetching appointment');
-//   }
-// });
+    res.json(appointment);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error fetching appointment');
+  }
+});
 
 // PUT: Update an appointment
 // Only admin can update an appointment
