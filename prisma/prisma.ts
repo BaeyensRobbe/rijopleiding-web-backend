@@ -1,6 +1,10 @@
-// prisma.ts
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient(); // Create a Prisma client instance
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-export default prisma;
+// Reuse Prisma client if already created, otherwise create a new one
+export const prisma = globalForPrisma.prisma || new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}

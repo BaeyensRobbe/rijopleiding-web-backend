@@ -291,6 +291,10 @@ router.post('/request-password-reset', async (req, res) => {
       return res.status(404).send('Er is nog geen account met dit e-mailadres geregistreerd');
     }
 
+    if (user.isConfirmed === false) {
+      return res.status(403).send('Je account is nog niet bevestigd. Wanneer je account bevestigd is, krijg je een e-mail met een wachtwoord. Neem contact op voor meer informatie.');
+    }
+
     const resetToken = generateResetToken();
     const resetTokenExpiration = new Date(Date.now() + 3600000); // Token expires in 1 hour
     console.log('resetToken:', resetToken);
@@ -309,11 +313,19 @@ router.post('/request-password-reset', async (req, res) => {
       from: process.env.EMAIL_USER,
       to: email,
       subject: 'Verzoek om wachtwoord te resetten',
+      text: `Beste ${user.firstName},\nJe hebt aangegeven je wachtwoord van Baeyens Rijopleiding te zijn vergeten.\nKlik op de volgende link om je wachtwoord te herstellen:${resetUrl}\nAls je geen verzoek hebt gedaan om je wachtwoord te herstellen, neem dan contact op via ${contactUrl}\nMet vriendelijke groet,\nBaeyens Rijopleiding`,
       html: `
-        <p>Dag ${user.firstName},</p>
-        <p>We hebben een verzoek gekregen om je wachtwoord te resetten. Klik op de volgende link om je wachtwoord opnieuw in te stellen:</p>
-        <p><a href="${resetUrl}">Stel een nieuw password in</a></p>
-        <p>Als je geen verzoek hebt gedaan om je passwoord te resetten, neem dan contact op via <a href="${contactUrl}">Contact</a></p>
+      <p>Beste ${user.firstName},</p>
+      <br/>
+      <p>Je hebt aangegeven je wachtwoord van Baeyens Rijopleiding te zijn vergeten.</p>
+      <p>Klik op de volgende link om je wachtwoord te herstellen:</p>
+ 
+      <p><a href="${resetUrl}">Stel wachtwoord opnieuw in</a></p>
+
+      <p>Als je geen verzoek hebt gedaan om je wachtwoord te herstellen, neem dan contact op via ${contactUrl}</p>
+      <br/>
+      <p>Met vriendelijke groet,</p>
+      <p>Baeyens Rijopleiding</p>
       `,
     };
 
