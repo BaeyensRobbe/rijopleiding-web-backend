@@ -226,6 +226,17 @@ router.post('/', authenticateJWTWithRole('ADMIN'), async (req, res) => {
 router.post('/register', async (req, res) => {
   try {
     const { courseId, firstName, lastName, email, phone, nationalNumber, RegistrationRole, street, houseNumber, city, postalCode } = req.body;
+    
+    const existingRegistration = await prisma.course_registration.findFirst({
+      where: {
+        national_number: nationalNumber
+      }
+    })
+
+    if (existingRegistration && existingRegistration.courseId === courseId) {
+      return res.status(400).send('Er is al een inschrijving met dit rijksregisternummer. Controleer uw e-mail voor een bevestiging.');
+    }
+
     const registration = await prisma.course_registration.create({
       data: {
         courseId,
@@ -241,6 +252,8 @@ router.post('/register', async (req, res) => {
         postalCode     
       }
     });
+
+    
 
     const course = await prisma.course.findUnique({
       where: {
