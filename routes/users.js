@@ -1,13 +1,12 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../utils/prisma.js';
 import sendMail from '../utils/sendMail.js';
 
 import { authenticateJWT, authenticateJWTWithRole } from '../utils/utils.js';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // GET: Fetch all users
 // Only admin needs to be able to fetch all users

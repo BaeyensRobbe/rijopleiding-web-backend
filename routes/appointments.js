@@ -1,12 +1,8 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
-import jwt from 'jsonwebtoken';
 import { authenticateJWTWithRole, authenticateJWT } from '../utils/utils.js';
+import prisma from '../utils/prisma.js';
 
 const router = express.Router();
-const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'secretkey';
-const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
 
 // GET: Fetch all appointments for the authenticated user
 // Only admin needs to fetch be able to fetch all appointments
