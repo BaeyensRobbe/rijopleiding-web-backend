@@ -1,5 +1,5 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../utils/prisma.js';
 import sendMail from '../utils/sendMail.js';
 import { formatDate, formatTime } from '../utils/utils.js';
 import ExcelJS from 'exceljs';
@@ -7,7 +7,6 @@ import ExcelJS from 'exceljs';
 import { authenticateJWT ,authenticateJWTWithRole } from '../utils/utils.js';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 router.get('/', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   try {

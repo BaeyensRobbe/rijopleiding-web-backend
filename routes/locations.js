@@ -1,9 +1,9 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
 import { authenticateJWT, authenticateJWTWithRole } from '../utils/utils.js';
+import prisma from '../utils/prisma.js';
+
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // GET: Fetch all locations
 // Only authenticated users can access this route

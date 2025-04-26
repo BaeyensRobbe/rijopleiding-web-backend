@@ -1,9 +1,7 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
 import contact from '../utils/sendMail.js';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // POST: Send contact email
 // No authentication needed for this route

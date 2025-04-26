@@ -1,14 +1,13 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../utils/prisma.js';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
 import sendMail from '../utils/sendMail.js';
 
 import { authenticateJWT } from '../utils/utils.js';
 
-const prisma = new PrismaClient();
 
 dotenv.config();
 

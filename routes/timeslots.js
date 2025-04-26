@@ -1,9 +1,8 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../utils/prisma.js';
 import { authenticateJWTWithRole, authenticateJWT } from '../utils/utils.js';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // GET: Fetch all timeslots
 // Only admin needs to fetch be able to fetch all timeslots
