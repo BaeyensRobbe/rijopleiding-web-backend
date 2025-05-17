@@ -4,10 +4,13 @@ const { google } = require('googleapis');
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 const calendarId = process.env.CALENDAR_EMAIL;
 
-const privateKey = process.env.PRIVATE_KEY
+const privateKey = process.env.PRIVATE_KEY;
 let key;
 if (privateKey) {
-  key = privateKey.replace(/\\n/g, '\n');
+  if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+    const slicedKey = privateKey.slice(1, -1);
+    key = slicedKey.replace(/\\n/g, '\n');
+  }
 }
 
 const auth = new google.auth.JWT(
