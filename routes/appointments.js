@@ -1,6 +1,8 @@
 import express from 'express';
 import { authenticateJWTWithRole, authenticateJWT } from '../utils/utils.js';
 import prisma from '../utils/prisma.js';
+import { addAppointmentToCalendar, deleteCalendarEvent } from '../utils/googleCalendar.js';
+import { calendar } from 'googleapis/build/src/apis/calendar/index.js';
 
 const router = express.Router();
 
@@ -151,6 +153,24 @@ router.post('/exam', authenticateJWTWithRole('ADMIN'), async (req, res) => {
       });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id: selectedUser },
+      select: { firstName: true, lastName: true },
+    });
+
+    try {
+      const calendarEventId = await addAppointmentToCalendar(appointment, user);
+
+      // Update the appointment with the calendar event ID
+      await prisma.appointment.update({
+        where: { id: appointment.id },
+        data: { calendarEventId: calendarEventId.data.id },
+      });
+    } catch (calendarError) {
+      console.error('Failed to add event to Google Calendar:', calendarError);
+      // Optionally continue even if calendar fails
+    }
+
     res.status(201).json(appointment);
   } catch (error) {
     console.error('Fout bij maken van afspraak:', error);
@@ -177,6 +197,26 @@ router.post('/', authenticateJWT, async (req, res) => {
       },
     });
 
+    const user = await prisma.user.findUnique({
+      where: { id: userId },  
+      select: { firstName: true, lastName: true },
+    });
+
+     try {
+      const calendarEventId = await addAppointmentToCalendar(appointment, user);
+
+      // Update the appointment with the calendar event ID
+      await prisma.appointment.update({
+        where: { id: appointment.id },
+        data: { calendarEventId: calendarEventId.data.id },
+      });
+    } catch (calendarError) {
+      console.error('Failed to add event to Google Calendar:', calendarError);
+      // Optionally continue even if calendar fails
+    }
+
+
+
     res.json(appointment);
   } catch (error) {
     console.error(error);
@@ -189,7 +229,6 @@ router.post('/', authenticateJWT, async (req, res) => {
 router.delete('/:appointmentId', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const { appointmentId } = req.params;
-    const userId = req.user.userId; // Extract user ID from JWT
 
     // Find the appointment and ensure it belongs to the authenticated user
     const appointment = await prisma.appointment.findUnique({
@@ -201,6 +240,15 @@ router.delete('/:appointmentId', authenticateJWTWithRole('ADMIN'), async (req, r
     if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
     }
+
+    if (appointment.calendarEventId){
+      try {
+        await deleteCalendarEvent(appointment.calendarEventId);
+      } catch (googleErr) {
+        console.error('Failed to delete event from Google Calendar:', googleErr);
+      }
+    }
+
     const timeSlotId = appointment.timeSlotId;
 
     // Delete the appointment
