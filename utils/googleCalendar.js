@@ -10,6 +10,8 @@ if (privateKey) {
   if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
     const slicedKey = privateKey.slice(1, -1);
     key = slicedKey.replace(/\\n/g, '\n');
+  } else {
+    key = privateKey.replace(/\\n/g, '\n');
   }
 }
 
