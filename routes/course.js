@@ -236,6 +236,16 @@ router.post('/register', async (req, res) => {
       return res.status(400).send('Er is al een inschrijving met dit rijksregisternummer. Controleer uw e-mail voor een bevestiging.');
     }
 
+    const course = await prisma.course.findUnique({
+      where: {
+        id: courseId
+      }
+    });
+
+    if (!course) {
+      return res.status(404).send('Course not found');
+    }
+
     const registration = await prisma.course_registration.create({
       data: {
         courseId,
@@ -252,18 +262,8 @@ router.post('/register', async (req, res) => {
       }
     });
 
-    
 
-    const course = await prisma.course.findUnique({
-      where: {
-        id: courseId
-      }
-    });
-
-    if (!course) {
-      return res.status(404).send('Course not found');
-    }
-
+    // Send confirmation email
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
