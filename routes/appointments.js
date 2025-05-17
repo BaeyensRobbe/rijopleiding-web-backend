@@ -153,6 +153,24 @@ router.post('/exam', authenticateJWTWithRole('ADMIN'), async (req, res) => {
       });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id: selectedUser },
+      select: { firstName: true, lastName: true },
+    });
+
+    try {
+      const calendarEventId = await addAppointmentToCalendar(appointment, user);
+
+      // Update the appointment with the calendar event ID
+      await prisma.appointment.update({
+        where: { id: appointment.id },
+        data: { calendarEventId: calendarEventId.data.id },
+      });
+    } catch (calendarError) {
+      console.error('Failed to add event to Google Calendar:', calendarError);
+      // Optionally continue even if calendar fails
+    }
+
     res.status(201).json(appointment);
   } catch (error) {
     console.error('Fout bij maken van afspraak:', error);
