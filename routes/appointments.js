@@ -70,6 +70,111 @@ router.get('/upcoming', authenticateJWTWithRole('ADMIN'),async (req, res) => {
   }
 });
 
+router.post('/appointmentandtimeslot', authenticateJWTWithRole('ADMIN'), async (req, res) => {
+  try {
+    const { startTime, endTime, selectedUser, location } = req.body;
+    if (!startTime || !endTime || !selectedUser || !location) {
+      return res.status(400).json({ message: 'Alle velden zijn verplicht.' });
+    }
+    // Check for overlapping time slots
+    const overlappingTimeSlot = await prisma.timeSlot.findFirst({
+      where: {
+      OR: [
+        {
+        startTime: {
+          lt: new Date(endTime),
+        },
+        endTime: {
+          gt: new Date(startTime),
+        },
+        }
+      ]
+      },
+    });
+
+    if (overlappingTimeSlot) {
+      return res.status(400).json({ message: 'Time slot overlaps with an already existing time slot.' });
+    }
+
+    // Create a new time slot
+    const newTimeSlot = await prisma.timeSlot.create({
+      data: {
+      startTime: new Date(startTime),
+      endTime: new Date(endTime),
+      isVisible: false,
+      status: 'BOOKED',
+      },
+    });
+
+    if (!newTimeSlot) {
+      throw new Error('Failed to create time slot');
+    }
+
+    let appointment = {};
+    // Create a new Appointment linked to the TimeSlot and User
+    if (location === 'Thuis ophalen') {
+      const user = await prisma.user.findUnique({
+        where: { id: selectedUser },
+      });
+      appointment = await prisma.appointment.create({
+        data: {
+          startTime: new Date(startTime),
+          endTime: new Date(endTime),
+          userId: selectedUser,
+          timeSlotId: newTimeSlot.id,
+          customPickupCity: user?.city,
+          customPickupPostalCode: user?.postalCode,
+          customPickupStreet: user?.street,
+          customPickupHouseNumber: user?.houseNumber,
+          isExam: false,
+        },
+      });
+
+    } else {
+      const locationObject = await prisma.location.findFirst({
+        where: { name: location },
+      });
+      appointment = await prisma.appointment.create({
+        data: {
+          startTime: new Date(startTime),
+          endTime: new Date(endTime),
+          userId: selectedUser,
+          timeSlotId: newTimeSlot.id,
+          locationId: locationObject?.id,
+          customPickupCity: locationObject?.city,
+          customPickupPostalCode: locationObject?.postalCode,
+          customPickupStreet: locationObject?.street,
+          customPickupHouseNumber: locationObject?.houseNumber,
+          isExam: false,
+        },
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: selectedUser },
+      select: { firstName: true, lastName: true },
+    });
+
+    try {
+      const calendarEventId = await addAppointmentToCalendar(appointment, user);
+
+      // Update the appointment with the calendar event ID
+      await prisma.appointment.update({
+        where: { id: appointment.id },
+        data: { calendarEventId: calendarEventId.data.id },
+      });
+    } catch (calendarError) {
+      console.error('Failed to add event to Google Calendar:', calendarError);
+      // Optionally continue even if calendar fails
+    }
+
+    res.status(201).json(appointment);
+  } catch (error) {
+    console.error('Fout bij maken van afspraak:', error);
+    res.status(500).json({ message: 'Er is een fout opgetreden.', error });
+  }
+})
+
 // POST: Create a new EXAM appointment
 // Only admin needs to create an exam
 router.post('/exam', authenticateJWTWithRole('ADMIN'), async (req, res) => {
