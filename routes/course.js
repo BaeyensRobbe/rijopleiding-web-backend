@@ -246,6 +246,24 @@ router.post('/register', async (req, res) => {
       return res.status(404).send('Course not found');
     }
 
+    // Check if the course is already full
+    const registrations = await prisma.course_registration.findMany({
+      where: {
+        courseId: courseId
+      }
+    });
+
+    const begeleiderCount = registrations.filter(reg => reg.RegistrationRole === 'BEGELEIDER').length;
+    const totalCount = registrations.length;
+
+    if (totalCount >= 24) {
+      return res.status(400).send('De cursus is volzet. U kan zich niet meer inschrijven.');
+    }
+
+    if (RegistrationRole === 'BEGELEIDER' && begeleiderCount >= 20) {
+      return res.status(400).send('Er zijn al 20 begeleiders ingeschreven. U kan zich niet meer als begeleider inschrijven.');
+    }
+
     const registration = await prisma.course_registration.create({
       data: {
         courseId,
