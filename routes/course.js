@@ -315,7 +315,7 @@ router.post('/register', async (req, res) => {
     Het vormingsmoment gaat door in lokaal “De Pompier” op de eerste verdieping van het OC Kasterlee. (Binnenpad 2 – ingang via de Karekietstraat of via de ondergrondse parkeergarage (gratis – validatie parkeerticket op het gelijkvloers))
     
     4. Betaling:
-    Gelieve 20 euro per begeleider over te schrijven op rekening: BE67 3631 1612 3487 van Baeyens Rijopleiding, met vermelding van je voornaam, naam en de datum van het vormingsmoment. Het aantal plaatsen per cursus is beperkt. Inschrijvingen waarvoor na 4 werkdagen nog geen betaling werd ontvangen, zullen daarom geannuleerd worden.
+    Gelieve 21 euro per begeleider over te schrijven op rekening: BE67 3631 1612 3487 van Baeyens Rijopleiding, met vermelding van je voornaam, naam en de datum van het vormingsmoment. Het aantal plaatsen per cursus is beperkt. Inschrijvingen waarvoor na 4 werkdagen nog geen betaling werd ontvangen, zullen daarom geannuleerd worden.
     
     5. Attest:
     Je ontvangt op het einde van het vormingsmoment een attest als bewijs. Dit attest blijft 10 jaar geldig en moet getoond worden bij het praktijkexamen.
@@ -374,7 +374,7 @@ router.post('/register', async (req, res) => {
         <p>Het vormingsmoment gaat door in lokaal “De Pompier” op de eerste verdieping van het OC Kasterlee. (Binnenpad 2 – ingang via de Karekietstraat of via de ondergrondse parkeergarage (gratis – validatie parkeerticket op het gelijkvloers))</p>
     
         <h4>4. Betaling:</h4>
-        <p>Gelieve 20 euro per begeleider over te schrijven op rekening: BE67 3631 1612 3487 van Baeyens Rijopleiding, met vermelding van je voornaam, naam en de datum van het vormingsmoment. Het aantal plaatsen per cursus is beperkt. Inschrijvingen waarvoor na 4 werkdagen nog geen betaling werd ontvangen, zullen daarom geannuleerd worden.</p>
+        <p>Gelieve 21 euro per begeleider over te schrijven op rekening: BE67 3631 1612 3487 van Baeyens Rijopleiding, met vermelding van je voornaam, naam en de datum van het vormingsmoment. Het aantal plaatsen per cursus is beperkt. Inschrijvingen waarvoor na 4 werkdagen nog geen betaling werd ontvangen, zullen daarom geannuleerd worden.</p>
     
         <h4>5. Attest:</h4>
         <p>Je ontvangt op het einde van het vormingsmoment een attest als bewijs. Dit attest blijft 10 jaar geldig en moet getoond worden bij het praktijkexamen.</p>

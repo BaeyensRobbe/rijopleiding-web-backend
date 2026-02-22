@@ -1,11 +1,11 @@
-// utils/googleCalendar.js
-const { google } = require('googleapis');
+import { google } from 'googleapis';
 
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 const calendarId = process.env.CALENDAR_EMAIL;
 
 const privateKey = process.env.PRIVATE_KEY;
 let key;
+
 if (privateKey) {
   if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
     const slicedKey = privateKey.slice(1, -1);
@@ -24,9 +24,9 @@ const auth = new google.auth.JWT(
 
 const calendar = google.calendar({ version: 'v3', auth });
 
-async function addAppointmentToCalendar(appointment, user) {
+export async function addAppointmentToCalendar(appointment, user) {
   const event = {
-    summary: (appointment.isExam ? 'Examen' : 'Rijles') + ` - ${user.firstName} ${user.lastName}`,
+    summary: `${appointment.isExam ? 'Examen' : 'Rijles'} - ${user.firstName} ${user.lastName}`,
     start: {
       dateTime: appointment.startTime.toISOString(),
       timeZone: 'Europe/Amsterdam',
@@ -46,11 +46,9 @@ async function addAppointmentToCalendar(appointment, user) {
     calendarId,
     requestBody: event,
   });
-
-  
 }
 
-async function deleteCalendarEvent(eventId) {
+export async function deleteCalendarEvent(eventId) {
   try {
     await calendar.events.delete({
       calendarId,
@@ -61,5 +59,3 @@ async function deleteCalendarEvent(eventId) {
     console.error('Error deleting event from Google Calendar:', error);
   }
 }
-
-module.exports = { addAppointmentToCalendar, deleteCalendarEvent };
