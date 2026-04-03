@@ -8,6 +8,7 @@ import timeslotRoutes from './routes/timeslots.js';
 import locationRoutes from './routes/locations.js';
 import contactRoutes from './routes/contact.js';
 import courseRoutes from './routes/course.js';
+import courseRegistrationRoutes from './routes/course-registrations.js';
 
 dotenv.config();
 
@@ -35,7 +36,7 @@ app.use('/timeslots', timeslotRoutes);
 app.use('/locations', locationRoutes);
 app.use('/contact', contactRoutes);
 app.use('/course', courseRoutes);
-
+app.use('/course-registrations', courseRegistrationRoutes);
 app.get('/', (req, res) => {
   res.send('Backend is live!');
 });

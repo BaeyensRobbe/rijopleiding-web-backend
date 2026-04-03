@@ -450,4 +450,18 @@ router.put('/dashboard-update', authenticateJWTWithRole('ADMIN'),async (req, res
   }
 });
 
+// Get registrations for a specific course
+router.get('/registrations/:id', authenticateJWTWithRole('ADMIN'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const registrations = await prisma.course_registration.findMany({
+      where: { courseId: parseInt(id) }
+    });
+    res.json(registrations);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error fetching registrations');
+  }
+});
+
 export default router;
