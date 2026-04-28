@@ -40,6 +40,8 @@ router.get('/available', async (req, res) => {
         Course_registration: {
           select: { firstName: true, lastName: true, RegistrationRole: true }
         }
+      }, orderBy: {
+        startTime: 'asc' 
       }
     });
 
