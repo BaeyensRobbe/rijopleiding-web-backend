@@ -3,6 +3,7 @@ import { authenticateJWTWithRole, authenticateJWT } from '../utils/utils.js';
 import prisma from '../utils/prisma.js';
 import { addAppointmentToCalendar, deleteCalendarEvent } from '../utils/googleCalendar.js';
 import { calendar } from 'googleapis/build/src/apis/calendar/index.js';
+import { recomputeAllTransmissions } from '../utils/transmissionLock.js';
 
 const router = express.Router();
 
@@ -41,8 +42,8 @@ router.get('/upcoming', authenticateJWTWithRole('ADMIN'),async (req, res) => {
     const now = new Date();
     const appointments = await prisma.appointment.findMany({
       where: {
-        startTime: {
-          gt: now, // Fetch only appointments with a startTime greater than the current time
+        endTime: {
+          gt: now,
         },
       },
       orderBy: {
@@ -72,8 +73,8 @@ router.get('/upcoming', authenticateJWTWithRole('ADMIN'),async (req, res) => {
 
 router.post('/appointmentandtimeslot', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
-    const { startTime, endTime, selectedUser, location } = req.body;
-    if (!startTime || !endTime || !selectedUser || !location) {
+    const { startTime, endTime, selectedUser, location, transmissionType } = req.body;
+    if (!startTime || !endTime || !selectedUser || !location || !transmissionType) {
       return res.status(400).json({ message: 'Alle velden zijn verplicht.' });
     }
     // Check for overlapping time slots
@@ -127,6 +128,7 @@ router.post('/appointmentandtimeslot', authenticateJWTWithRole('ADMIN'), async (
           customPickupStreet: user?.street,
           customPickupHouseNumber: user?.houseNumber,
           isExam: false,
+          transmissionChosen: transmissionType,
         },
       });
 
@@ -146,6 +148,7 @@ router.post('/appointmentandtimeslot', authenticateJWTWithRole('ADMIN'), async (
           customPickupStreet: locationObject?.street,
           customPickupHouseNumber: locationObject?.houseNumber,
           isExam: false,
+          transmissionChosen: transmissionType,
         },
       });
     }
@@ -154,6 +157,8 @@ router.post('/appointmentandtimeslot', authenticateJWTWithRole('ADMIN'), async (
       where: { id: selectedUser },
       select: { firstName: true, lastName: true },
     });
+
+    await recomputeAllTransmissions();
 
     try {
       const calendarEventId = await addAppointmentToCalendar(appointment, user);
@@ -179,9 +184,9 @@ router.post('/appointmentandtimeslot', authenticateJWTWithRole('ADMIN'), async (
 // Only admin needs to create an exam
 router.post('/exam', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
-    const { startTime, endTime, selectedUser, location } = req.body;
+    const { startTime, endTime, selectedUser, location, transmissionType } = req.body;
 
-    if (!startTime || !endTime || !selectedUser || !location) {
+    if (!startTime || !endTime || !selectedUser || !location || !transmissionType) {
       return res.status(400).json({ message: 'Alle velden zijn verplicht.' });
     }
     // Check for overlapping time slots
@@ -235,6 +240,7 @@ router.post('/exam', authenticateJWTWithRole('ADMIN'), async (req, res) => {
           customPickupStreet: user?.street,
           customPickupHouseNumber: user?.houseNumber,
           isExam: true,
+          transmissionChosen: transmissionType,
         },
       });
 
@@ -254,6 +260,7 @@ router.post('/exam', authenticateJWTWithRole('ADMIN'), async (req, res) => {
           customPickupStreet: locationObject?.street,
           customPickupHouseNumber: locationObject?.houseNumber,
           isExam: true,
+          transmissionChosen: transmissionType,
         },
       });
     }
@@ -262,6 +269,8 @@ router.post('/exam', authenticateJWTWithRole('ADMIN'), async (req, res) => {
       where: { id: selectedUser },
       select: { firstName: true, lastName: true },
     });
+
+    await recomputeAllTransmissions();
 
     try {
       const calendarEventId = await addAppointmentToCalendar(appointment, user);
@@ -287,7 +296,16 @@ router.post('/exam', authenticateJWTWithRole('ADMIN'), async (req, res) => {
 // Only authenticated users can create/book an appointment
 router.post('/', authenticateJWT, async (req, res) => {
   try {
-    const { timeSlotId, userId, locationId, customPickupStreet, customPickupHouseNumber, customPickupPostalCode, customPickupCity, startTime, endTime } = req.body;
+    const { timeSlotId, userId, locationId, customPickupStreet, customPickupHouseNumber, customPickupPostalCode, customPickupCity, startTime, endTime, transmissionType } = req.body;
+
+    // Enforce transmission restriction if the timeslot has one
+    if (timeSlotId) {
+      const slot = await prisma.timeSlot.findUnique({ where: { id: timeSlotId } });
+      if (slot?.TransmissionOptions?.length > 0 && !slot.TransmissionOptions.includes(transmissionType)) {
+        return res.status(400).json({ message: `Dit tijdslot is alleen beschikbaar voor ${slot.TransmissionOptions.join(' of ')}.` });
+      }
+    }
+
     const appointment = await prisma.appointment.create({
       data: {
         timeSlotId,
@@ -299,28 +317,26 @@ router.post('/', authenticateJWT, async (req, res) => {
         customPickupCity,
         startTime: new Date(startTime),
         endTime: new Date(endTime),
+        transmissionChosen: transmissionType,
       },
     });
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },  
-      select: { firstName: true, lastName: true },
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { transmissionPreference: transmissionType },
     });
 
-     try {
-      const calendarEventId = await addAppointmentToCalendar(appointment, user);
+    await recomputeAllTransmissions();
 
-      // Update the appointment with the calendar event ID
+    try {
+      const calendarEventId = await addAppointmentToCalendar(appointment, updatedUser);
       await prisma.appointment.update({
         where: { id: appointment.id },
         data: { calendarEventId: calendarEventId.data.id },
       });
     } catch (calendarError) {
       console.error('Failed to add event to Google Calendar:', calendarError);
-      // Optionally continue even if calendar fails
     }
-
-
 
     res.json(appointment);
   } catch (error) {
@@ -370,12 +386,13 @@ router.delete('/:appointmentId', authenticateJWTWithRole('ADMIN'), async (req, r
       } else {
         await prisma.timeSlot.update({
           where: { id: timeSlotId },
-          data: { 
+          data: {
             status: 'AVAILABLE',
             isVisible: true,
             appointmentId: null,
           },
         });
+        await recomputeAllTransmissions();
       }
     }
 
@@ -415,16 +432,14 @@ router.put('/dashboard-update', authenticateJWTWithRole('ADMIN'), async (req, re
       return res.status(400).send('ID is required');
     }
 
-    console.log('Updated Data: ', updatedData);
+    const { location, ...filteredData } = updatedData;
 
-    const { location, ...filteredData } = updatedData; // Exclude location from updatedData
-    
     const updatedObject = await prisma.appointment.update({
-      where: {
-      id: id
-      },
-      data: filteredData
+      where: { id },
+      data: filteredData,
     });
+
+    await recomputeAllTransmissions();
 
     res.json(updatedObject);
   } catch (error) {

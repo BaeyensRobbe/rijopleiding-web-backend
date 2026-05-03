@@ -1,6 +1,7 @@
 import express from 'express';
 import prisma from '../utils/prisma.js';
 import { authenticateJWTWithRole, authenticateJWT } from '../utils/utils.js';
+import { recomputeAllTransmissions } from '../utils/transmissionLock.js';
 
 const router = express.Router();
 
@@ -99,14 +100,23 @@ router.post('/', authenticateJWTWithRole('ADMIN'), async (req, res) => {
     start.setMilliseconds(0);
     end.setMilliseconds(0);
 
-    const timeslot = await prisma.timeSlot.create({
-      data: {
-        startTime: start,
-        endTime: end,
-        isVisible,
-        status,
-      },
-    });
+    let timeslot;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        timeslot = await prisma.timeSlot.create({
+          data: { startTime: start, endTime: end, isVisible, status },
+        });
+        await recomputeAllTransmissions();
+        break;
+      } catch (err) {
+        if (err.code === 'P2002' && err.meta?.target?.includes('id') && attempt < 4) {
+          // Sequence is behind the actual max id — advance it and retry
+          await prisma.$executeRaw`SELECT setval(pg_get_serial_sequence('"TimeSlot"', 'id'), COALESCE(MAX(id), 0) + 1, false) FROM "TimeSlot"`;
+        } else {
+          throw err;
+        }
+      }
+    }
 
     res.json(timeslot);
   } catch (error) {
@@ -222,6 +232,7 @@ router.delete('/:id', authenticateJWTWithRole('ADMIN'),async (req, res) => {
     }
 
     await prisma.timeSlot.delete({ where: { id: parseInt(id) } });
+    await recomputeAllTransmissions();
 
     res.json({ message: 'TimeSlot deleted successfully' });
   } catch (error) {
@@ -256,20 +267,18 @@ router.get('/:id', authenticateJWTWithRole('ADMIN'), async (req, res) => {
 // This route is protected by the authenticateJWTWithRole middleware
 router.put('/dashboard-update', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
-    const { id, ...updatedData } = req.body;
+    const { id, startTime, endTime, isVisible, status } = req.body;
 
     if (!id) {
       return res.status(400).send('ID is required');
     }
 
-    console.log('Updated Data: ', updatedData);
-
     const updatedObject = await prisma.timeSlot.update({
-      where: {
-        id: id
-      },
-      data: updatedData
+      where: { id },
+      data: { startTime, endTime, isVisible, status },
     });
+
+    await recomputeAllTransmissions();
 
     res.json(updatedObject);
   } catch (error) {
