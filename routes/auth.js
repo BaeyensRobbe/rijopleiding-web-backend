@@ -223,7 +223,7 @@ router.post('/reset-password', async (req, res) => {
     const { token, newPassword } = req.body;
 
     if (!token || !newPassword) {
-      return res.status(400).send('Token and new password are required');
+      return res.status(400).json({ reason: 'MISSING_FIELDS', message: 'Token en nieuw wachtwoord zijn verplicht.' });
     }
 
     // Find the user by the reset token
@@ -231,8 +231,13 @@ router.post('/reset-password', async (req, res) => {
       where: { resetToken: token },
     });
 
+    // No match means the link was already used, or a newer reset request
+    // replaced this token. Either way the user needs a fresh link.
     if (!user) {
-      return res.status(404).send('Invalid token or user not found');
+      return res.status(404).json({
+        reason: 'INVALID_TOKEN',
+        message: 'Deze link is niet meer geldig. Hij is al gebruikt of er is intussen een nieuwe link aangevraagd.',
+      });
     }
 
     // Check if the reset token has expired
@@ -240,11 +245,17 @@ router.post('/reset-password', async (req, res) => {
     const currentTime = new Date();
 
     if (tokenExpiration === null) {
-      return res.status(400).send('No reset token found for this user');
+      return res.status(400).json({
+        reason: 'INVALID_TOKEN',
+        message: 'Deze link is niet meer geldig. Vraag een nieuwe link aan.',
+      });
     }
 
     if (currentTime > tokenExpiration) {
-      return res.status(400).send('The password reset token has expired');
+      return res.status(400).json({
+        reason: 'EXPIRED_TOKEN',
+        message: 'Deze link is vervallen. Vraag een nieuwe link aan.',
+      });
     }
 
     // Hash the new password
@@ -264,7 +275,7 @@ router.post('/reset-password', async (req, res) => {
     res.json({ message: 'Password successfully reset' });
   } catch (error) {
     console.error(error);
-    res.status(500).send('Error resetting password');
+    res.status(500).json({ reason: 'SERVER_ERROR', message: 'Er is iets fout gegaan bij het resetten van je wachtwoord.' });
   }
 });
 
@@ -295,8 +306,7 @@ router.post('/request-password-reset', async (req, res) => {
     }
 
     const resetToken = generateResetToken();
-    const resetTokenExpiration = new Date(Date.now() + 3600000); // Token expires in 1 hour
-    console.log('resetToken:', resetToken);
+    const resetTokenExpiration = new Date(Date.now() + 86400000); // Token expires in 24 hours
 
     await prisma.user.update({
       where: { email },
@@ -312,7 +322,7 @@ router.post('/request-password-reset', async (req, res) => {
       from: process.env.EMAIL_USER,
       to: email,
       subject: 'Verzoek om wachtwoord te resetten',
-      text: `Beste ${user.firstName},\nJe hebt aangegeven je wachtwoord van Baeyens Rijopleiding te zijn vergeten.\nKlik op de volgende link om je wachtwoord te herstellen:${resetUrl}\nAls je geen verzoek hebt gedaan om je wachtwoord te herstellen, neem dan contact op via ${contactUrl}\nMet vriendelijke groet,\nBaeyens Rijopleiding`,
+      text: `Beste ${user.firstName},\nJe hebt aangegeven je wachtwoord van Baeyens Rijopleiding te zijn vergeten.\nKlik op de volgende link om je wachtwoord te herstellen:${resetUrl}\nDeze link blijft 24 uur geldig. Vraag je een nieuwe link aan, dan werkt deze link niet meer.\nAls je geen verzoek hebt gedaan om je wachtwoord te herstellen, neem dan contact op via ${contactUrl}\nMet vriendelijke groet,\nBaeyens Rijopleiding`,
       html: `
       <p>Beste ${user.firstName},</p>
       <br/>
@@ -320,6 +330,8 @@ router.post('/request-password-reset', async (req, res) => {
       <p>Klik op de volgende link om je wachtwoord te herstellen:</p>
  
       <p><a href="${resetUrl}">Stel wachtwoord opnieuw in</a></p>
+
+      <p>Deze link blijft 24 uur geldig. Vraag je een nieuwe link aan, dan werkt deze link niet meer.</p>
 
       <p>Als je geen verzoek hebt gedaan om je wachtwoord te herstellen, neem dan contact op via ${contactUrl}</p>
       <br/>
