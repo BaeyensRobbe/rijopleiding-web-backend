@@ -377,7 +377,6 @@ router.delete('/:appointmentId', authenticateJWTWithRole('ADMIN'), async (req, r
       where: { id: parseInt(appointmentId) },
     });
     
-    console.log(timeSlotId);
     if (timeSlotId) {
       if (isExamen) {
         await prisma.timeSlot.delete({

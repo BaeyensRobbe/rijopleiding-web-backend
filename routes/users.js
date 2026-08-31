@@ -1,4 +1,5 @@
 import express from 'express';
+import * as Sentry from '@sentry/node';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import prisma from '../utils/prisma.js';
@@ -7,6 +8,24 @@ import sendMail from '../utils/sendMail.js';
 import { authenticateJWT, authenticateJWTWithRole } from '../utils/utils.js';
 
 const router = express.Router();
+
+// Velden die een gebruiker via PUT /:id op zijn EIGEN profiel mag wijzigen.
+// Alles wat hier niet in staat (role, passwordHash, isConfirmed, resetToken,
+// resetTokenExpiration, acceptedTerms, pickupAllowed, transmissionPreference,
+// id, createdAt, ...) is server-gestuurd en wordt genegeerd. Dit sluit het
+// gat waarbij een gewone gebruiker zichzelf tot ADMIN kon maken.
+const USER_EDITABLE_FIELDS = [
+  'firstName',
+  'lastName',
+  'email',
+  'phone',
+  'street',
+  'houseNumber',
+  'postalCode',
+  'city',
+  'birthDate',
+  'temporaryLicenseExpiration',
+];
 
 // GET: Fetch all users
 // Only admin needs to be able to fetch all users
@@ -24,13 +43,20 @@ router.get('/', authenticateJWTWithRole('ADMIN'),async (req, res) => {
 });
 
 // GET: Get a user by ID
-// Only authenticated users can access their own data
-// This route is protected by the authenticateJWT middleware
+// A user may only fetch their OWN record; an admin may fetch anyone.
+// This route is protected by the authenticateJWT middleware.
 router.get('/:id', authenticateJWT, async (req, res) => {
   const { id } = req.params;
+  const requestedId = parseInt(id);
+
+  // Ownership check: block reading someone else's data unless you're admin.
+  if (req.user.role !== 'ADMIN' && req.user.userId !== requestedId) {
+    return res.status(403).send('Forbidden: je kan alleen je eigen gegevens opvragen');
+  }
+
   try {
     const user = await prisma.user.findUnique({
-      where: { id: parseInt(id) }
+      where: { id: requestedId }
     });
 
     if (!user) {
@@ -39,6 +65,7 @@ router.get('/:id', authenticateJWT, async (req, res) => {
 
     res.json(user);
   } catch (error) {
+    Sentry.captureException(error);
     console.error(error);
     res.status(500).send('Error fetching user');
   }
@@ -70,41 +97,50 @@ router.put('/dashboard-update', authenticateJWTWithRole('ADMIN'), async (req, re
 });
 
 // PUT: Update a user by ID
-// Only authenticated users can update their own data
-// This route is protected by the authenticateJWT middleware
-router.put('/:id', authenticateJWT,async (req, res) => {
+// A user may only update their OWN profile, and only the fields in
+// USER_EDITABLE_FIELDS. Server-gestuurde velden zoals role en passwordHash
+// worden altijd genegeerd. Admin-bewerkingen lopen via /dashboard-update.
+// This route is protected by the authenticateJWT middleware.
+router.put('/:id', authenticateJWT, async (req, res) => {
   const { id } = req.params;
+  const requestedId = parseInt(id);
   const updatedUser = req.body; // This will contain the fields to update
+
+  // Ownership check: a non-admin can only edit their own record.
+  if (req.user.role !== 'ADMIN' && req.user.userId !== requestedId) {
+    return res.status(403).send('Forbidden: je kan alleen je eigen gegevens wijzigen');
+  }
 
   try {
     // Fetch the user to ensure they exist
     const user = await prisma.user.findUnique({
-      where: { id: parseInt(id) }
+      where: { id: requestedId }
     });
 
     if (!user) {
       return res.status(404).send('User not found');
     }
 
-    // Create a new object with the fields to be updated
+    // Allowlist: alleen expliciet toegestane velden overnemen. Zo kan een
+    // gebruiker nooit role, passwordHash, isConfirmed, resetToken, ... zetten
+    // door die simpelweg in de request body mee te sturen.
     const updatedData = {};
-
-    // Only include the fields that exist in updatedUser
-    Object.keys(updatedUser).forEach(key => {
-      if (updatedUser[key] !== undefined && key !== 'appointments') {
+    USER_EDITABLE_FIELDS.forEach(key => {
+      if (updatedUser[key] !== undefined) {
         updatedData[key] = updatedUser[key];
       }
     });
 
-    // Update the user only with the provided fields
+    // Update the user only with the allowed fields
     const updatedUserData = await prisma.user.update({
-      where: { id: parseInt(id) },
+      where: { id: requestedId },
       data: updatedData
     });
 
     // Return the updated user
     res.json({ message: 'User updated successfully', updatedUserData });
   } catch (error) {
+    Sentry.captureException(error);
     console.error(error);
     res.status(500).send('Error updating user');
   }
@@ -114,7 +150,6 @@ router.put('/:id', authenticateJWT,async (req, res) => {
 // Only admin can approve users
 // This route is protected by the authenticateJWTWithRole middleware
 router.post('/:id/approve', authenticateJWTWithRole('ADMIN'),async (req, res) => {
-  console.log('approve request has been callled');
   try {
     const { id } = req.params;
     const user = await prisma.user.findUnique({ where: { id: parseInt(id) } });
@@ -125,7 +160,6 @@ router.post('/:id/approve', authenticateJWTWithRole('ADMIN'),async (req, res) =>
 
     const generatedPassword = crypto.randomBytes(4).toString('hex');
     const hashedPassword = await bcrypt.hash(generatedPassword, 10);
-    console.log('before update');
     const updatedUser = await prisma.user.update({
       where: { id: parseInt(id) },
       data: {
@@ -133,7 +167,6 @@ router.post('/:id/approve', authenticateJWTWithRole('ADMIN'),async (req, res) =>
         passwordHash: hashedPassword,
       },
     });
-    console.log('before mailoptions');
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: user.email,
@@ -155,9 +188,7 @@ router.post('/:id/approve', authenticateJWTWithRole('ADMIN'),async (req, res) =>
        <p>Met vriendelijke groet,</p>
        <p>Baeyens rijopleiding</p>`,
     };
-    console.log(mailOptions);
     await sendMail.sendMail(mailOptions);
-    console.log('after sending mail');
 
     res.json({ message: 'User approved and password sent successfully', updatedUser, mailOptions });
   } catch (error) {

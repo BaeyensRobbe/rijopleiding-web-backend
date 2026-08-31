@@ -48,14 +48,8 @@ router.post('/', authenticateJWTWithRole('ADMIN'), async (req, res) => {
   try {
     const { startTime, endTime, isVisible, status } = req.body;
 
-    console.log('Start Time:', startTime);
-    console.log('End Time:', endTime);
-
     const isoStartTime = new Date(startTime);
     const isoEndTime = new Date(endTime).toISOString();
-
-    console.log('ISO Start Time:', isoStartTime);
-    console.log('ISO End Time:', isoEndTime);
 
     const overlappingTimeslot = await prisma.timeSlot.findFirst({
       where: {
@@ -89,7 +83,6 @@ router.post('/', authenticateJWTWithRole('ADMIN'), async (req, res) => {
     });
 
     if (overlappingTimeslot) {
-      console.log('Overlapping timeslot:', overlappingTimeslot);
       return res.status(400).json(`Deze uren overlappen met het tijdsslot van ${new Date(overlappingTimeslot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(overlappingTimeslot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
     }
 
@@ -162,7 +155,6 @@ router.get('/byId', authenticateJWT, async (req, res) => {
       return res.status(400).json({ message: 'Start time is required' });
     }
 
-    console.log('Start Time:', startTime);
 
     // Parse the startTime string into a JavaScript Date object
     const parsedStartTime = new Date(startTime);

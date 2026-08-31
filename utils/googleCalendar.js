@@ -54,7 +54,6 @@ export async function deleteCalendarEvent(eventId) {
       calendarId,
       eventId,
     });
-    console.log('Event deleted from Google Calendar:', eventId);
   } catch (error) {
     console.error('Error deleting event from Google Calendar:', error);
   }

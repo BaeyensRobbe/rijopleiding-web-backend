@@ -1,3 +1,10 @@
+// Sentry wordt via `node --import ./instrument.js` geladen (zie package.json
+// "start"), want in ESM worden alle imports gehoist en zou deze regel pas na
+// express draaien — dan blijft express oninstrumenteerd. Deze import blijft
+// staan als vangnet wanneer iemand `node server.js` rechtstreeks draait.
+import './instrument.js';
+import * as Sentry from '@sentry/node';
+
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -40,6 +47,11 @@ app.use('/course-registrations', courseRegistrationRoutes);
 app.get('/', (req, res) => {
   res.send('Backend is live!');
 });
+
+// Sentry error handler: moet NA alle routes komen, maar VOOR andere
+// error-middleware. Vangt elke fout die uit een route omhoog borrelt en
+// stuurt die naar je Sentry dashboard (en dus naar je telefoon).
+Sentry.setupExpressErrorHandler(app);
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => {

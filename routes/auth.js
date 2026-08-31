@@ -1,4 +1,5 @@
 import express from 'express';
+import * as Sentry from '@sentry/node';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../utils/prisma.js';
@@ -62,6 +63,7 @@ router.post('/register', async (req, res) => {
 
     res.json(user);
   } catch (error) {
+    Sentry.captureException(error);
     console.error(error);
     res.status(500).send('Error creating user');
   }
@@ -115,6 +117,7 @@ router.post('/login', async (req, res) => {
     // Verstuur het token naar de client
     res.json({ message: 'Login successful', token, user: { id: user.id, email: user.email, role: user.role } });
   } catch (error) {
+    Sentry.captureException(error);
     console.error(error);
     res.status(500).send('Error logging in');
   }
@@ -156,6 +159,7 @@ router.get('/profile', authenticateJWT, async (req, res) => {
 
     res.json({ profile: user });
   } catch (error) {
+    Sentry.captureException(error);
     console.error(error);
     res.status(500).send('Error fetching user profile');
   }
@@ -167,9 +171,6 @@ router.get('/profile', authenticateJWT, async (req, res) => {
 router.post('/change-password', authenticateJWT, async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
-
-    console.log('oldPassword:', oldPassword);
-    console.log('newPassword:', newPassword);
 
     if (!oldPassword || !newPassword) {
       return res.status(400).send('Old and new passwords are required');
@@ -189,8 +190,6 @@ router.post('/change-password', authenticateJWT, async (req, res) => {
       return res.status(400).send('User has no password set');
     }
     const isPasswordValid = await bcrypt.compare(oldPassword, user.passwordHash);
-    console.log('oldPassword:', oldPassword);
-    console.log('passwordHash: ', user.passwordHash);
 
     if (!isPasswordValid) {
       return res.status(401).send('Old password is incorrect');
@@ -210,6 +209,7 @@ router.post('/change-password', authenticateJWT, async (req, res) => {
 
     res.json({ message: 'Password successfully updated', user: updatedUser });
   } catch (error) {
+    Sentry.captureException(error);
     console.error(error);
     res.status(500).send('Error updating password');
   }
@@ -274,6 +274,7 @@ router.post('/reset-password', async (req, res) => {
 
     res.json({ message: 'Password successfully reset' });
   } catch (error) {
+    Sentry.captureException(error);
     console.error(error);
     res.status(500).json({ reason: 'SERVER_ERROR', message: 'Er is iets fout gegaan bij het resetten van je wachtwoord.' });
   }
@@ -348,6 +349,7 @@ router.post('/request-password-reset', async (req, res) => {
       message: 'A password reset link has been sent to your email address.',
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error('error: ', error);
     res.status(500).send('Er is iets fout gegaan bij het versturen van de e-mail, neem contact op met de beheerder');
   }

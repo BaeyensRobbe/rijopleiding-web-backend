@@ -14,7 +14,6 @@
 
   async function sendMail(mailOptions) {
     try {
-      console.log('Sending email... send email called');
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -23,7 +22,6 @@
         },
       });
 
-      console.log(`Email to ${mailOptions.to} will be sent!`);
       return await transporter.sendMail(mailOptions);
     } catch (error) {
       console.error('Error sending email:', error);

@@ -6,7 +6,6 @@ export const authenticateJWT = (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
 
   if (!token) {
-    console.log('No token provided');
     return res.status(401).send('Access Denied');
   }
 
@@ -24,7 +23,6 @@ export const authenticateJWTWithRole = (requiredRole) => (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
 
   if (!token) {
-    console.log('No token provided');
     return res.status(401).send('Access Denied');
   }
 

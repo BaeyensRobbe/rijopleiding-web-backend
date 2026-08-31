@@ -436,8 +436,6 @@ router.put('/dashboard-update', authenticateJWTWithRole('ADMIN'),async (req, res
       return res.status(400).send('Course ID is required');
     }
 
-    console.log('Update Data: ', updateData);
-
     const updatedCourse = await prisma.course.update({
       where: {
         id: id
